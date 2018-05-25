@@ -112,7 +112,7 @@ class Obstacle:
         # rotating the query point into the obstacle frame of reference
         if self.d == 2 :
             self.rotMatrix = [[cos(self.th_r), -sin(self.th_r)],
-                 [sin(self.th_r),  cos(self.th_r)]]
+                              [sin(self.th_r),  cos(self.th_r)]]
         else:
             print('not implemented yet')
         # elif d == 3
@@ -122,3 +122,6 @@ class Obstacle:
         #     R = R_x*R_y*R_z
         # else: #rotation is not yet supported for d > 3
         #     R = np.eye(d)
+    
+        def obs_check_collision(obs_list, X, Y):
+            print('todo - impolement this in class \n')

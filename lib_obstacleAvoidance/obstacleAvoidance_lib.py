@@ -16,7 +16,7 @@ if not any (lib_string in s for s in sys.path):
     
 from lib_obstacleAvoidance import *
 
-def IFD(x, xd, obs):
+def obs_avoidance_convergence(x, xd, obs):
 
     # Initialize Variables
     N_obs = len(obs) #number of obstacles
@@ -64,7 +64,6 @@ def IFD(x, xd, obs):
         # Move to obstacle centered frame
         x_t = R[:,:,n].T @ (x-obs[n].x0)
         
-
         E[:,:,n], Gamma[n] = compute_basis_matrix(d,x_t,obs[n], R[:,:,n])
                         
         # if Gamma[n]<0.99: 

@@ -27,9 +27,9 @@ base_pwd = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm_python/"
 t = Symbol('t')
 
 # Define x1, x2 as unknown functions
-#x1 = Symbol('x1')
-#x2 = Symbol('x2')
-x1, x2 = symbols('x1 x2', cls=Function)
+x1 = Symbol('x1')
+x2 = Symbol('x2')
+#x1, x2 = symbols('x1 x2', cls=Function)
 k2 = symbols('k2', cls=Function)
 
 # Position of attractor
@@ -45,8 +45,11 @@ t2_0 = Symbol('t2_0') # Direction of tangent
 l_t = Symbol('l_t') # Direction of tangent
 l_n = Symbol('l_n') # Direction of tangent
 
+t1_0, t2_0 = symbols('t1_0 t2_0', cls=Function)
+l_t, l_n = symbols('l_t, l_n', cls=Function)
+
 # -------------------- Linear System --------------------
-f_x = Matrix([-x1(t),-x2(t)])
+f_x = Matrix([-x1,-x2])
 #f_x = k2(x1(t),x2(t))*Matrix([-x1(t),-x2(t)])
 
 
@@ -56,15 +59,18 @@ f_x = Matrix([-x1(t),-x2(t)])
 # t1 in R, t2>0
 
 # Normal
-n = Matrix([x1(t)-d1,x2(t)-d2,0])
-E = Matrix([[n[0], t1],[n[1], t2]])
-D = Matrix([[l_n, 0], [0, l_t]])
+#n = Matrix([x1(t)-d1,x2(t)-d2,0])
+n = Matrix([x1-d1,x2-d2,0])
+#E = Matrix([[n[0], t1],[n[1], t2]])
+#D = Matrix([[l_n, 0], [0, l_t]])
+D = Matrix([[l_n(x1,x2), 0], [0, l_t(x1,x2)]])
+#E = Matrix([[n[0], t1(x1(t),x2(t))],[n[1], t2]])
+E = Matrix([[n[0], t1(x1,x2)],[n[1], t2(x1,x2)]])                   
 
 # Modulation Matrix
 M = E @ D @ E.inv()
 
 # -------------------- Evaluation --------------------
-
 x_dot = simplify(M @ f_x)
 # Extend to 3d for cross product
 x_dot = x_dot.col_join(Matrix([0]))
@@ -105,8 +111,8 @@ x  = Matrix([x1(t),x2(t),0])
 
 # -------------------- Determinant of Jacobian --------------------
 
-JacX = Matrix([[diff(x_dot[0],x1(t)), diff(x_dot[0],x2(t)) ],
-                   [diff(x_dot[1],x1(t)), diff(x_dot[1],x2(t)) ]])
+JacX = Matrix([[diff(x_dot[0],x1), diff(x_dot[0],x2) ],
+               [diff(x_dot[1],x1), diff(x_dot[1],x2) ]])
 
 tra = simplify(JacX[0,0] + JacX[1,1])
 print('')
@@ -129,27 +135,27 @@ print('determinant')
 print( det)
 print('')
 
-# Theta = simplify(E**-1)
-# F = Theta**(-1) @ JacSym @ Theta
-# print('')
-# print('F')
-# print(F)
-# print('')
 
+Theta = simplify( M**(-1) )
+F = Theta**(-1) @ JacX @ Theta
+F_sym = simplify(1/2*(F + F.T))
 
-# #det2 = simplify(F[0,0]*F[1,1] - F[0,1]*F[1,0])
-# det2 = (F[0,0]*F[1,1] - F[0,1]*F[1,0])
-# print('')
-# print('det metric')
-# print(det2)
-# print('')
+print('')
+print('F')
+print(F)
+print('')
 
-# #tra2 = simplify(F[0,0] + F[1,1])
-# tra2 = (F[0,0] + F[1,1])
-# print('')
-# print('tra metric')
-# print(tra2)
-# print('')
+detF = simplify((F[0,0]*F[1,1] - F[0,1]*F[1,0]))
+print('')
+print('det F')
+print(detF)
+print('')
+
+traF = simplify(F[0,0] + F[1,1])
+print('')
+print('tra F')
+print(traF)
+print('')
 
 # -------------------- Zeros / Poles --------------------
 
@@ -231,10 +237,12 @@ print('')
 
 printToFunction = True
 if printToFunction:
-    det_str = str(det)
+    #det_str = str(det)
+    det_str = str(detF)
     det_str = str.replace(det_str, "(t)", "")
 
-    tra_str = str(tra)
+    #tra_str = str(tra)
+    tra_str = str(traF)
     tra_str = str.replace(tra_str, "(t)", "")
 
     intend = "    " # default indent python

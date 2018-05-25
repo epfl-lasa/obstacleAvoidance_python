@@ -138,7 +138,7 @@ for ix in range(N_x):
         Gamma = sum((x_t / np.array(obs[n_obs].a)) ** (2*np.array(obs[n_obs].p) ) )
         nv = (2*np.array(obs[n_obs].p) / np.array(obs[n_obs].a) * (x_t / obs[n_obs].a)**(2*np.array(obs[n_obs].p) - 1)) #normal vector of the tangential hyper-plane
 
-        x_t = np.array(obs[n_obs].rotMatrix).T @ nv
+        #x_t = np.array(obs[n_obs].rotMatrix).T @ nv
         
         nv = np.array(obs[n_obs].rotMatrix).T @ nv
         #nv_hat = np.array([x1,x2]) - xAttractor
@@ -154,7 +154,7 @@ for ix in range(N_x):
 #         l_t = 1+1/(Gamma)
         
         # Jacobian Original
-        trace[ix,iy], determinant[ix, iy] = contraction_det_trace(x1, x2, l_n, l_t, t1, t2, d1)
+        determinant[ix, iy], trace[ix,iy] = contraction_det_trace(x1, x2, l_n, l_t, t1, t2, d1)
 
         sqrtDet = cmath.sqrt(trace[ix,iy]**2/4 - determinant[ix,iy])
         
@@ -252,7 +252,8 @@ for ii in range (0,4):
     #     #imagesc(xValues, yValues, denominator.T) hold on # Create plot
     #     caxis(2*[-1,1]) # set axis range
     #     measureName = "denominator"
-    
+
+    figs[ii].canvas.set_window_title("Figure - " + measureName)
     cbar = plt.colorbar()
     cbar.set_ticks([colTicks[0], 0, colTicks[-1]])
     cbar.set_ticklabels([colTicks[0], 0, colTicks[-1]])
@@ -296,5 +297,6 @@ for ii in range (0,4):
     if saveFig:
         plt.savefig(base_pwd + "fig/analysisContraction_" + simulationName +  "_" + measureName + ".pdf" )
 
+plt.ion()        
 plt.show()
 #fprintf("Numerical evaluation took #d seconds. \n", t_numericalZero)

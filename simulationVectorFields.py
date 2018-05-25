@@ -3,7 +3,6 @@ Obstacle Avoidance Algorithm script with vecotr field
 
 @author LukasHuber
 @date 2018-02-15
-
 '''
 
 # Command to automatically reload libraries -- in ipython before exectureion
@@ -35,11 +34,22 @@ from lib_obstacleAvoidance import obs_check_collision
 from class_obstacle import *
 from obstacleAvoidance_lib import *
 from obs_common_section import *
-
+from obs_dynamic_center import *
 
 def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttractor = np.array(([0,0])), safeFigure = False):
-    N_x = N_y
+
+    fig_ifd, ax_ifd = plt.subplots(figsize=(10,8))    
+    
+    # Numerical hull of ellipsoid
+    for n in range(len(obs)):
+        obs[n].draw_ellipsoid() # 50 points resolution
+
+    # Adjust dynamic center
+    intersection_obs = obs_common_section(obs)
+    dynamic_center(obs, intersection_obs)
+
     # Create meshrgrid of points
+    N_x = N_y
     YY, XX = np.mgrid[y_range[0]:y_range[1]:N_y*1j, x_range[0]:x_range[1]:N_x*1j]
 
     # Initialize array
@@ -51,32 +61,31 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
             
             xd_init[:,ix,iy] = linearAttractor(pos, x0 = xAttractor ) # initial DS
             
-            xd_IFD[:,ix,iy] = IFD(pos, xd_init[:,ix,iy],obs) # modulataed DS with IFD
-            #import pdb; pdb.set_trace() ## DEBUG ##
+            xd_IFD[:,ix,iy] = obs_avoidance_convergence(pos, xd_init[:,ix,iy],obs) # modulataed DS with IFD
 
     if sysDyn_init:
-        fig_init, ax_init = plt.subplots()
-        res_init = ax_init.streamplot(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color='k')
-        res_init = ax_init.streamplot(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color='k')
+        fig_init, ax_init = plt.subplots(figsize=(10,8))
+        res_init = ax_init.streamplot(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color=[(0.3,0.3,0.3)])
         
         ax_init.plot(xAttractor[0],xAttractor[1], 'k*')
         plt.gca().set_aspect('equal', adjustable='box')
++
+
 
         plt.xlim(x_range)
         plt.ylim(y_range)
 
         if safeFigure:
             print('implement figure saving')
-            
         
     collisions = obs_check_collision(obs, XX, YY)
     
     dx1_noColl = np.squeeze(xd_IFD[0,:,:]) * collisions
     dx2_noColl = np.squeeze(xd_IFD[1,:,:]) * collisions
     
-    fig_ifd, ax_ifd = plt.subplots()    
+    
     #res_ifd = ax_ifd.streamplot(XX, YY,xd_IFD[0,:,:], xd_IFD[1,:,:], color='k')
-    res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color='k')
+    res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=[0.5,0.5,0.5])
     
     ax_ifd.plot(xAttractor[0],xAttractor[1], 'k*',linewidth=7.0)
     
@@ -88,15 +97,10 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
     plt.xlabel(r'$\xi_1$')
     plt.ylabel(r'$\xi_2$')
 
-    for n in range(len(obs)):
-        obs[n].draw_ellipsoid() # 50 points resolution
-    #obs, x_obs_sf = obs_common_section(obs)
-
     # Draw obstacles
     obs_polygon = []
 
     #obs_alternative = obs_draw_ellipsoid()
-    
     for n in range(len(obs)):
         x_obs_sf = obs[n].x_obs # todo include in obs_draw_ellipsoid
         obs_polygon.append( plt.Polygon(obs[n].x_obs))
@@ -105,15 +109,20 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
         #x_obs_sf_list = x_obs_sf[:,:,n].T.tolist()
         plt.plot([x_obs_sf[i][0] for i in range(len(x_obs_sf))],
                  [x_obs_sf[i][1] for i in range(len(x_obs_sf))], 'k--')
+
+        ax_ifd.plot(obs[n].x0[0],obs[n].x0[1],'k.')
+        if hasattr(obs[n], 'center_dyn'):# automatic adaptation of center 
+            ax_ifd.plot(obs[n].center_dyn[0],obs[n].center_dyn[1], 'r+')
         
 
-        if hasattr(obs[n], 'center_dyn'):# automatic adaptation of center 
-            ax_ifd.plot(obs[n].center_dyn[0],obs[n].center_dyn[1], 'k+')
-        else:
-            ax_ifd.plot(obs[n].x0[0],obs[n].x0[1],'k+')
+
+
+
         
+
     plt.ion()
     plt.show()
+    
     if safeFigure:
         print('implement figure saving')
 
@@ -122,31 +131,33 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
 
 ### -------------------------------------------------
 # Start main function
-plt.close("all") # close figures
+#plt.close("all") # close figures
 
 posAttractor = [0,0]
 
 obs = []
 n = 0
-a = [1,3]
+a = [3,1]
 p = [1,1]
 x0 = [4,0]
-th_r = 60/180*pi
+th_r = 30/180*pi
 sf = 1
 obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
 #obs[n].center_dyn = np.array([2,1.4])
 
 # Obstacle 2
-# a = [3,1]
-# p = [1,1]
-# x0 = [3,-3]
-# th_r = 90/180*pi
-# sf = 1
-# obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+a = [2,1.5]
+p = [1,1]
+x0 = [8,4]
+th_r = 50/180*pi
+sf = 1
+obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
 #obs[n].center_dyn = np.array([2,1.4])
 
-N_points = 10
-Simulation_vectorFields([-2,8],[-5,5], N_points, obs)
+N_points = 50
+xlim = [-5,20]
+ylim = [-5,20]
+Simulation_vectorFields(xlim, ylim, N_points, obs)
 #Simulation_vectorFields([-10,10],[-10,10], 30, 30, obs)
 
 # # For testing reasons
@@ -155,4 +166,3 @@ pos = np.array([0,3])
 # xd_IFD = IFD(pos, xd_init,obs) # modulataed DS with IFD
 
 print('finished script')
-
