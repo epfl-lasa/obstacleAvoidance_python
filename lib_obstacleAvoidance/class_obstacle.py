@@ -5,7 +5,7 @@ import warnings
 class Obstacle:
     """ Class of obstacles """
     # self.N_obs = 0
-    def __init__(self, a=[1,1], p=[1,1], x0=[0,0], th_r=0, sf=1, xd=[1,1], sigma=1):
+    def __init__(self, a=[1,1], p=[1,1], x0=[0,0], th_r=0, sf=1, xd=[1,1], sigma=1, dx=0, w=0, x_start=0, x_end=-1):
         # Obstacle Counter
         self.a = a
         self.p = p
@@ -28,11 +28,26 @@ class Obstacle:
 
         #self.center_dyn = self.x0
 
-    
-    def update(self, t, dt):
-        self.x0 = [0,0]
-        self.xd = [0,0]
+        # Dynamic simulation
+        self.w = w
+        self.dx = dx
 
+        if not (self.w and self.dx):
+            x_end = 0
+        
+        self.x_start = x_start
+        self.x_end = x_end
+    
+    def update_pos(self, t, dt):
+        # TODO - implement function dependend movement (yield), nonlinear integration
+        # First order Euler integration
+         
+        if self.x_end < t:
+            if self.x_start>t:
+                self.x0 = self.x0 + dt*self.dx # update position
+                self.theta_r = self.theta_r + dt*self.w  #update orientation/attitude
+
+        self.draw_ellipsoid()
 
     def draw_ellipsoid(self, numPoints=50, a_temp = [0,0], draw_sfObs = False):
         if self.d == 2:

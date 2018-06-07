@@ -46,6 +46,7 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
 
     # Adjust dynamic center
     intersection_obs = obs_common_section(obs)
+    print('intersection_obs', intersection_obs)
     dynamic_center(obs, intersection_obs)
 
     # Create meshrgrid of points
@@ -69,7 +70,7 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
         
         ax_init.plot(xAttractor[0],xAttractor[1], 'k*')
         plt.gca().set_aspect('equal', adjustable='box')
-+
+
 
 
         plt.xlim(x_range)
@@ -115,11 +116,6 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
             ax_ifd.plot(obs[n].center_dyn[0],obs[n].center_dyn[1], 'r+')
         
 
-
-
-
-        
-
     plt.ion()
     plt.show()
     
@@ -135,24 +131,66 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
 
 posAttractor = [0,0]
 
-obs = []
-n = 0
-a = [3,1]
-p = [1,1]
-x0 = [4,0]
-th_r = 30/180*pi
-sf = 1
-obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
-#obs[n].center_dyn = np.array([2,1.4])
+option=0
 
-# Obstacle 2
-a = [2,1.5]
-p = [1,1]
-x0 = [8,4]
-th_r = 50/180*pi
-sf = 1
-obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
-#obs[n].center_dyn = np.array([2,1.4])
+if option==0:
+    obs = []
+
+    a = [3,1]
+    p = [1,1]
+    x0 = [4,0]
+    th_r = 30/180*pi
+    sf = 1
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+    #obs[n].center_dyn = np.array([2,1.4])
+
+    # Obstacle 2
+    a = [2,1.5]
+    p = [1,1]
+    x0 = [8,4]
+    th_r = 50/180*pi
+    sf = 1
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+    #obs[n].center_dyn = np.array([2,1.4])
+
+if option==1:
+    ### Create obstacle 
+    obs = []
+
+    a = [5,1]
+    p = [1,1]
+    x0 = [5,0]
+    th_r = 30/180*pi
+    sf = 1
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+    a = [7,2]
+    p = [1,1]
+    x0 = [7,1]
+    th_r = -40/180*pi
+    sf = 1
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+if option==2:
+    ### Create obstacle 
+    obs = []
+
+    a = [5,2]
+    p = [1,1]
+    x0 = [4,2]
+    th_r = 30/180*pi
+    sf = 1
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+    a = [7,2]
+    p = [1,1]
+    x0 = [7,-2]
+    th_r = -40/180*pi
+    sf = 1
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+
+
 
 N_points = 50
 xlim = [-5,20]

@@ -90,5 +90,4 @@ def obs_draw_ellipsoid(obs,ns, nargout=1):
         # if 'concaveAngle' in obs[n]:
         #     x_obs(:,:,n) = ellipsFold(x_obs(:,:,n),obs{n}.x0, obs{n}.concaveAngle)
         #     x_obs_sf(:,:,n) = ellipsFold(x_obs_sf(:,:,n),obs{n}.x0, obs{n}.concaveAngle)
-        
 
