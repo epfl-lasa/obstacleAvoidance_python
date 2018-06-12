@@ -72,13 +72,24 @@ def obs_avoidance_convergence(x, xd, obs):
 
     #adding the influence of the rotational and cartesian velocity of the
     #obstacle to the velocity of the robot
+    
     #xd_obs = np.zeros((dim, N_obs))
-    xd_obs = 0
-    # for n in range(N_obs):
+    xd_obs = np.zeros((d))
+    
+    for n in range(N_obs):
     #     x_temp = x-np.array(obs[n].x0)
     #     xd_w_obs = np.array([-x_temp[1], x_temp[0]])*w[n]
 
-    #     xd_obs = xd_obs + w[n] * np.exp(-1/obs[n].sigma*(max([Gamma[n], 1])-1) )* (obs[n].xd + xd_w_obs)
+        if d==2:
+            xd_w = np.cross(np.hstack(([0,0], obs[n].w)),
+                            np.hstack((x-obs[n].x0,0)))
+                            
+            xd_w = xd_w[0:2]
+        else:
+            print('todo 3d')
+        #i=0
+        xd_obs = xd_obs + w[n]*np.exp(-1/obs[n].sigma*(max([Gamma[n],1])-1))*  ( np.array(obs[n].xd) + xd_w )
+        #xd_obs = xd_obs + w[n]* ( np.array(obs[n].xd) + xd_w )
         
         #the exponential term is very helpful as it help to avoid the crazy rotation of the robot due to the rotation of the object
 

@@ -145,8 +145,8 @@ def dynamic_center(obs, intersection_obs, marg_dynCenter=1.3, N_distStep=3, reso
 
                             if resol > N_resol:
                                 # only arc of convex obstacle is observed
-                                indLow = max([indLow-1, 1]) 
-                                indHigh= min([indHigh+1, N_resol])
+                                indLow = max([indLow-1, 0]) 
+                                indHigh= min([indHigh+1, N_resol-1])
                             else:
 
                                 if indHigh == ind_intersec.shape[0] and indLow == 1:
@@ -165,16 +165,15 @@ def dynamic_center(obs, intersection_obs, marg_dynCenter=1.3, N_distStep=3, reso
 
                                 #indLow = find(intersection_ind_temp,1)-1
                                 indLow -= 1
-                                if indLow == 0:
-                                    indLow = N_resol
+                                if indLow < 0:
+                                    indLow = N_resol-1
 
                                 #indHigh = find(intersection_ind_temp,1,'last')+1
                                 indHigh += 1
-                                if indHigh > N_resol:
-                                    indHigh = 1  
+                                if indHigh >= N_resol:
+                                    indHigh = 0  
 
-
-                            xRange =  np.vstack((x_obs_temp[:,indLow],x_obs_temp[:,indHigh] )).T
+                            xRange =  np.vstack((x_obs_temp[:,indLow], x_obs_temp[:,indHigh] )).T
                             # TODO - remove after debugging
     #                         plot( xRange(1,:), xRange(2,:),'g --')
 

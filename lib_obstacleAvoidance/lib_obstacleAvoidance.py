@@ -10,21 +10,37 @@ import warnings
 
 from math import cos, sin
 
-def compute_R(d,th_r):
+
+         
+def compute_R(d, th_r):
+    if th_r == 0:
+        rotMatrix = np.eye(d)
+
+
     # rotating the query point into the obstacle frame of reference
-    if d == 2 :
-        R = np.array(([[np.cos(th_r), -np.sin(th_r)],
-                       [np.sin(th_r),  np.cos(th_r)]] ))
-        return R
+    if d==2:
+        rotMatrix = np.array([[cos(th_r), -sin(th_r)],
+                              [sin(th_r),  cos(th_r)]])
+    elif d==3:
+        R_x = np.array([[1, 0, 0,],
+                    [0, np.cos(th_r[0]), np.sin(th_r[0])],
+                    [0, -np.sin(th_r[0]), np.cos(th_r[0])] ])
+
+        R_y = np.array([[np.cos(th_r[1]), 0, -np.sin(th_r[1])],
+                    [0, 1, 0],
+                    [np.sin(th_r[1]), 0, np.cos(th_r[1])] ])
+
+        R_z = np.array([[np.cos(th_r[2]), np.sin(th_r[2]), 0],
+                    [-np.sin(th_r[2]), np.cos(th_r[2]), 0],
+                    [ 0, 0, 1] ])
+
+        rotMatrix = R_x.dot(R_y).dot(R_z)
     else:
-        print('not implemented yet')
-    # elif d == 3
-    #     R_x = [ 1, 0, 0 0, np.cos(th_r[0]), np.sin(th_r[0]) 0, -np.sin(th_r[0]), np.cos(th_r[0])]
-    #     R_y = [np.cos(th_r(2)), 0, -np.sin(th_r(2)) 0, 1, 0 np.sin(th_r(2)), 0, np.cos(th_r(2))]
-    #     R_z = [np.cos(th_r(3)), np.sin(th_r(3)), 0 -np.sin(th_r(3)), np.cos(th_r(3)), 0 0, 0, 1]
-    #     R = R_x*R_y*R_z
-    # else: #rotation is not yet supported for d > 3
-    #     R = np.eye(d)
+        warnings.warn('rotation not yet defined in dimensions d > 3 !')
+        rotMatrix = np.eye(d)
+
+    return rotMatrix
+
 
 
 def compute_weights(distMeas, N, distMeas_min=1, weightType='inverseGamma'):
@@ -78,7 +94,10 @@ def obs_check_collision(obs_list, XX, YY):
     # input is a matrix Nx2
 
     dim_points = XX.shape
-    N_points = dim_points[0]*dim_points[1]
+    if len(dim_points)==1:
+        N_points = dim_points[0]
+    else:
+        N_points = dim_points[0]*dim_points[1]
     
     points = np.array(([np.reshape(XX,(N_points,)) , np.reshape(YY, (N_points,)) ] ))
     # At the moment only implemented for 2D
@@ -89,7 +108,6 @@ def obs_check_collision(obs_list, XX, YY):
     if len(obs_list) == 0:
         return 
 
-    #[x_obs, x_obs_sf] = obs_draw_ellipsoid(obs_list,50)
     N_points = points.shape[1]
 
     noColl = np.ones((1,N_points))

@@ -36,7 +36,7 @@ from obstacleAvoidance_lib import *
 from obs_common_section import *
 from obs_dynamic_center import *
 
-def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttractor = np.array(([0,0])), safeFigure = False):
+def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], N_y=10, obs=[], sysDyn_init=False, xAttractor = np.array(([0,0])), safeFigure = False):
 
     fig_ifd, ax_ifd = plt.subplots(figsize=(10,8))    
     
@@ -62,16 +62,14 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
             
             xd_init[:,ix,iy] = linearAttractor(pos, x0 = xAttractor ) # initial DS
             
-            xd_IFD[:,ix,iy] = obs_avoidance_convergence(pos, xd_init[:,ix,iy],obs) # modulataed DS with IFD
+            xd_IFD[:,ix,iy] = obs_avoidance_convergence(pos, xd_init[:,ix,iy],obs) # modulataed DS with IFDs
 
     if sysDyn_init:
         fig_init, ax_init = plt.subplots(figsize=(10,8))
-        res_init = ax_init.streamplot(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color=[(0.3,0.3,0.3)])
+        res_init = ax_init.streamplot(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color=[(0.3,0.k3,0.3)])
         
         ax_init.plot(xAttractor[0],xAttractor[1], 'k*')
         plt.gca().set_aspect('equal', adjustable='box')
-
-
 
         plt.xlim(x_range)
         plt.ylim(y_range)
@@ -84,9 +82,9 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
     dx1_noColl = np.squeeze(xd_IFD[0,:,:]) * collisions
     dx2_noColl = np.squeeze(xd_IFD[1,:,:]) * collisions
     
-    
     #res_ifd = ax_ifd.streamplot(XX, YY,xd_IFD[0,:,:], xd_IFD[1,:,:], color='k')
     res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=[0.5,0.5,0.5])
+    #res_ifd = ax_ifd.vectofield(XX, YY,dx1_noColl, dx2_noColl, color=[0.5,0.5,0.5])
     
     ax_ifd.plot(xAttractor[0],xAttractor[1], 'k*',linewidth=7.0)
     
@@ -105,6 +103,7 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
     for n in range(len(obs)):
         x_obs_sf = obs[n].x_obs # todo include in obs_draw_ellipsoid
         obs_polygon.append( plt.Polygon(obs[n].x_obs))
+        obs_polygon[n].set_color(np.array([176,124,124])/255)
         plt.gca().add_patch(obs_polygon[n])
         
         #x_obs_sf_list = x_obs_sf[:,:,n].T.tolist()
@@ -114,8 +113,7 @@ def Simulation_vectorFields(x_range,y_range, N_y, obs, sysDyn_init=False, xAttra
         ax_ifd.plot(obs[n].x0[0],obs[n].x0[1],'k.')
         if hasattr(obs[n], 'center_dyn'):# automatic adaptation of center 
             ax_ifd.plot(obs[n].center_dyn[0],obs[n].center_dyn[1], 'r+')
-        
-
+            
     plt.ion()
     plt.show()
     
@@ -136,22 +134,29 @@ option=0
 if option==0:
     obs = []
 
-    a = [3,1]
-    p = [1,1]
-    x0 = [4,0]
-    th_r = 30/180*pi
+    a=[0.2, 1]
+    p=[3,3]
+    x0=[1.5,1]
+    th_r=0/180*pi
+    sf=1
+    
+    xd=[5,0]
+    x_start = 0
+    x_end = 2
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end))
+    #obs[n].center_dyn = np.array([2,1.4])
+
+    # Obstacle 2
+    a = [0.4,0.2]
+    p = [4,4]
+    x0 = [1.9,1.3]
+    th_r = 0/180*pi
     sf = 1
     obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
     #obs[n].center_dyn = np.array([2,1.4])
 
-    # Obstacle 2
-    a = [2,1.5]
-    p = [1,1]
-    x0 = [8,4]
-    th_r = 50/180*pi
-    sf = 1
-    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
-    #obs[n].center_dyn = np.array([2,1.4])
+    xlim = [-1,4]
+    ylim = [-0.1,3]
 
 if option==1:
     ### Create obstacle 
@@ -189,13 +194,28 @@ if option==2:
     sf = 1
     obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
 
+if option==3:
+    obs = []
 
+    a=[0.5, 0.8]
+    p=[1,1]
+    x0=[1.5,1.3]
+    th_r=0/180*pi
+    sf=1
+    w = 0
+    xd=[0,5]
+    x_start = 0
+    x_end = 2
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end, w=w))
 
+    xlim = [-1,4]
+    ylim = [-0.1,3]
+    
+N_points = 10
 
-N_points = 50
-xlim = [-5,20]
-ylim = [-5,20]
-Simulation_vectorFields(xlim, ylim, N_points, obs)
+xAttractor = np.array([0,1.3])
+
+Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor)
 #Simulation_vectorFields([-10,10],[-10,10], 30, 30, obs)
 
 # # For testing reasons
