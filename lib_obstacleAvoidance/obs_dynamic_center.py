@@ -21,13 +21,14 @@ def dynamic_center(obs, intersection_obs, marg_dynCenter=1.3, N_distStep=3, reso
 
     N_obs = len(obs)
     if N_obs<=1:  # only one or no obstacle
-        return 
+        return []
 
     # only implemented for 2d
     dim = obs[0].d
 
     if(dim>2):
-        warnings.warning('Not implemented for higher order than d=2! \n')
+        warnings.warn('Not implemented for higher order than d=2! \n')
+        return []
 
     # Resolution of outside plot
     # MAYBE - Change to user fixed size -- replot first oneh

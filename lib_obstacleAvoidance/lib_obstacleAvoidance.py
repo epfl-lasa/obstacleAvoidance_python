@@ -23,16 +23,16 @@ def compute_R(d, th_r):
                               [sin(th_r),  cos(th_r)]])
     elif d==3:
         R_x = np.array([[1, 0, 0,],
-                    [0, np.cos(th_r[0]), np.sin(th_r[0])],
-                    [0, -np.sin(th_r[0]), np.cos(th_r[0])] ])
+                        [0, np.cos(th_r[0]), np.sin(th_r[0])],
+                        [0, -np.sin(th_r[0]), np.cos(th_r[0])] ])
 
         R_y = np.array([[np.cos(th_r[1]), 0, -np.sin(th_r[1])],
-                    [0, 1, 0],
-                    [np.sin(th_r[1]), 0, np.cos(th_r[1])] ])
+                        [0, 1, 0],
+                        [np.sin(th_r[1]), 0, np.cos(th_r[1])] ])
 
         R_z = np.array([[np.cos(th_r[2]), np.sin(th_r[2]), 0],
-                    [-np.sin(th_r[2]), np.cos(th_r[2]), 0],
-                    [ 0, 0, 1] ])
+                        [-np.sin(th_r[2]), np.cos(th_r[2]), 0],
+                        [ 0, 0, 1] ])
 
         rotMatrix = R_x.dot(R_y).dot(R_z)
     else:
@@ -49,7 +49,6 @@ def compute_weights(distMeas, N, distMeas_min=1, weightType='inverseGamma'):
         
     distMeas = np.array([max(distMeas[i]-distMeas_min,0) for i in range(N)])
 
-    #print('N', N)
     w = np.zeros(([1,N]))
 
     #Gamma(Gamma<1) = 1
@@ -90,8 +89,13 @@ def compute_weights(distMeas, N, distMeas_min=1, weightType='inverseGamma'):
     return w
 
 
-def obs_check_collision(obs_list, XX, YY):
-    # input is a matrix Nx2
+
+def obs_check_collision_2d(obs_list, XX, YY):
+    # No obstacles
+    if len(obs_list) == 0:
+        return
+
+    dim = 2 
 
     dim_points = XX.shape
     if len(dim_points)==1:
@@ -102,11 +106,6 @@ def obs_check_collision(obs_list, XX, YY):
     points = np.array(([np.reshape(XX,(N_points,)) , np.reshape(YY, (N_points,)) ] ))
     # At the moment only implemented for 2D
     collision = np.zeros( dim_points )
-
-    d = 2 # Only immplemented for 2d at the moment
-
-    if len(obs_list) == 0:
-        return 
 
     N_points = points.shape[1]
 
@@ -121,3 +120,27 @@ def obs_check_collision(obs_list, XX, YY):
         noColl = (noColl* Gamma>1)
 
     return np.reshape(noColl, dim_points)
+
+
+def obs_check_collision(points, obs_list=[]):
+    # No obstacles
+    if len(obs_list) == 0:
+        return
+
+    dim = points.shape[0]
+    N_points = points.shape[1]
+
+    # At the moment only implemented for 2D
+    collision = np.zeros((N_points))
+
+    noColl = np.ones((1,N_points))
+
+    for it_obs in range(len(obs_list)):
+        # \Gamma = \sum_{i=1}^d (xt_i/a_i)^(2p_i) = 1
+        R = compute_R(dim,obs_list[it_obs].th_r)
+
+        Gamma = sum( ( 1/obs_list[it_obs].sf * R.T @ (points - np.tile(np.array([obs_list[it_obs].x0]).T,(1,N_points) ) ) / np.tile(np.array([obs_list[it_obs].a]).T, (1, N_points)) )**(np.tile(2*np.array([obs_list[it_obs].p]).T, (1,N_points)) ) )
+
+        noColl = (noColl* Gamma>1)
+
+    return noColl

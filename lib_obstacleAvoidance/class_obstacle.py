@@ -18,13 +18,14 @@ class Obstacle:
         #self.xd = xd
         #self.w = w
 
-        self.d = len(x0)
-
-        # Rotation Matrix
-        self.compute_R()
-
-        self.x_obs = []
-        self.x_obs_sf = []
+        self.d = len(x0) #Dimension of space
+        
+        self.R = []
+        self.compute_R() # Compute Rotation Matrix
+        
+        self.resolution = 0 #Resolution of drawing
+        self.x_obs = [] # Numerical drawing of obstacle boundary
+        self.x_obs_sf = [] # Obstacle boundary plus margin!
 
         #self.center_dyn = self.x0
         self.timeVariant = timeVariant
@@ -41,8 +42,10 @@ class Obstacle:
         else:
             self.x_end = 0
             
-        self.w = w
-        self.xd = xd
+        self.w = w # Rotational velocity
+        self.xd = xd # 
+
+        
            
     
     def update_pos(self, t, dt):
@@ -64,23 +67,23 @@ class Obstacle:
                     if self.d <= 2:
                         self.th_r = self.th_r + dt*self.w  #update orientation/attitude
                     else:
-                        print('dim', self.d)
                         self.th_r = [self.th_r[i]+dt*self.w[i] for i in range(self.d)]  #update orientation/attitude
-                    # Update rotation matrix
-                    self.compute_R()
+                    self.compute_R() # Update rotation matrix
                 
                 # TODO optimize update of ellipsoid 
                 self.draw_ellipsoid()
             
 
-    def draw_ellipsoid(self, numPoints=50, a_temp = [0,0], draw_sfObs = False):
+    def draw_ellipsoid(self, numPoints=20, a_temp = [0,0], draw_sfObs = False):
         if self.d == 2:
             theta = np.linspace(-pi,pi, num=numPoints)
+            resolution = numPoints # Resolution of drawing #points
             #numPoints = numPoints
         else:
             numPoints = [numPoints, ceil(numPoints/2)]
             theta, phi = np.meshgrid(np.linspace(-pi,pi, num=numPoints[0]),np.linspace(-pi/2,pi/2,num=numPoints[1]) ) #
             numPoints = numPoints[0]*numPoints[1]
+            resolution = numPoints # Resolution of drawing #points
             theta = theta.T
             phi = phi.T
 
