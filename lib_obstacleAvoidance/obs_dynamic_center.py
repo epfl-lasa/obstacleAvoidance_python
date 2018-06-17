@@ -1,3 +1,4 @@
+
 import numpy as np
 
 from math import pi
@@ -82,9 +83,8 @@ def dynamic_center(obs, intersection_obs, marg_dynCenter=1.3, N_distStep=3, reso
                 continue
 
             # For ellipses:
-            #ref_dist = marg_dynCenter*0.5*sqrt(0.25*(sqrt(sum(obs[ii].a)^2+max(obs[jj].a)^2))
-            dist_contact = 0.5*(np.sqrt(np.sum(np.array(obs[ii].a)**2))) + np.sqrt(np.sum(np.array(obs[jj].a)**2))
-            ref_dist = dist_contact*marg_dynCenter
+            ref_dist = marg_dynCenter*0.5*sqrt(0.25*(sqrt(sum(obs[ii].a)^2+max(obs[jj].a)^2))
+
 
             #ref_dist(ii,jj) = ref_dist(jj,ii) # symmetric
 

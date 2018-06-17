@@ -43,10 +43,13 @@ def compute_R(d, th_r):
 
 
 
-def compute_weights(distMeas, N, distMeas_min=1, weightType='inverseGamma'):
+def compute_weights(distMeas, N=0, distMeas_min=1, weightType='inverseGamma'):
     #UNTITLED5 Summary of this function goes here
     #   Detailed explanation goes here
-        
+
+    #import pdb; pdb.set_trace() ## DEBUG ##
+    if N==0:
+        N = len(distMeas)
     distMeas = np.array([max(distMeas[i]-distMeas_min,0) for i in range(N)])
 
     w = np.zeros(([1,N]))

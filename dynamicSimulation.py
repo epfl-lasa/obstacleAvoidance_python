@@ -1,6 +1,5 @@
 '''
 Dynamic Simulation - Obstacle Avoidance Algorithm
-
 @author LukasHuber
 @date 2018-05-24
 
@@ -13,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-# 3D Animation utils
+# 3D Animatcoion utils
 from mpl_toolkits.mplot3d import Axes3D
 import mpl_toolkits.mplot3d.art3d as art3d
 #from matplotlib.animation import writers
@@ -44,7 +43,8 @@ from lib_obstacleAvoidance import obs_check_collision
 from class_obstacle import *
 from lib_modulation import *
 from obs_common_section import *
-from obs_dynamic_center import *
+#from obs_dynamic_center import *
+from obs_dynamic_center_3d import *
 
 
 # --------------  Start script --------------
@@ -143,7 +143,8 @@ class Animated():
 
         # Adjust dynamic center
         intersection_obs = obs_common_section(self.obs)
-        dynamic_center(self.obs, intersection_obs)
+        #dynamic_center(self.obs, intersection_obs)
+        dynamic_center_3d(self.obs, intersection_obs)
         
         # Then setup FuncAnimation.
         self.ani = FuncAnimation(self.fig, self.update, interval=1, 
@@ -210,7 +211,7 @@ class Animated():
             return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns)
 
         intersection_obs = obs_common_section(self.obs)
-        dynamic_center(self.obs, intersection_obs)
+        dynamic_center_3d(self.obs, intersection_obs)
 
         # Calculate DS
         for j in range(self.N_points):
@@ -225,8 +226,6 @@ class Animated():
             self.lines[j].set_ydata(self.x_pos[1,:self.iSim+1,j])
             if self.dim==3:
                 self.lines[j].set_3d_properties(zs=self.x_pos[2,:self.iSim+1,j])
-
-
         
         # ========= Check collision ----------
         #collisions = obs_check_collision(self.x_pos[:,self.iSim+1,:], obs)
@@ -308,31 +307,40 @@ class Animated():
 #### Create starting points
 N = 3
 
-simuCase=1
+simuCase=0
 if simuCase==0:
+    N = 10
+    x_init = np.vstack((np.ones(N)*20,
+                        np.linspace(-10,10,num=N) ))
+                        
     ### Create obstacle 
     obs = []
 
     a = [5, 2]
     p = [1, 1]
-    x0 = [13.5, 2]
+    x0 = [10.0, 0]
     th_r = 30/180*pi
     sf = 1.
 
     xd=[0, 0]
     w = 0
-
     x_start = 0
     x_end = 2
     obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end, w=w))
 
-    a = [7,2]
+    a = [3,2]
     p = [1,1]
-    x0 = [7,-2]
+    x0 = [7,-6]
     th_r = -40/180*pi
     sf = 1.
 
-    xRange = [-1,20]
+    xd=[0.25, 1]
+    w = 0
+    x_start = 0
+    x_end = 2
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end, w=w))
+
+    xRange = [ -1,20]
     yRange = [-10,10]
     zRange = [-10,10]
     #obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
@@ -385,4 +393,3 @@ if True:
 print()
 print('---- Script finished ---- ')
 print() # THE END
- 

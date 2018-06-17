@@ -25,14 +25,12 @@ lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm_python
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 
-lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm_python/"
-if not any (lib_string in s for s in sys.path):
-    sys.path.append(lib_string)
+
 
 from draw_ellipsoid import *
 from lib_obstacleAvoidance import obs_check_collision
 from class_obstacle import *
-from obstacleAvoidance_lib import *
+from lib_modulation import *
 from obs_common_section import *
 from obs_dynamic_center import *
 
@@ -66,7 +64,7 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], N_y=10, obs=[], sysDy
 
     if sysDyn_init:
         fig_init, ax_init = plt.subplots(figsize=(10,8))
-        res_init = ax_init.streamplot(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color=[(0.3,0.k3,0.3)])
+        res_init = ax_init.streamplot(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color=[(0.3,0.3,0.3)])
         
         ax_init.plot(xAttractor[0],xAttractor[1], 'k*')
         plt.gca().set_aspect('equal', adjustable='box')
@@ -113,7 +111,7 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], N_y=10, obs=[], sysDy
         ax_ifd.plot(obs[n].x0[0],obs[n].x0[1],'k.')
         if hasattr(obs[n], 'center_dyn'):# automatic adaptation of center 
             ax_ifd.plot(obs[n].center_dyn[0],obs[n].center_dyn[1], 'r+')
-            
+
     plt.ion()
     plt.show()
     
@@ -212,7 +210,7 @@ if option==3:
     ylim = [-0.1,3]
     
 N_points = 10
-
+p
 xAttractor = np.array([0,1.3])
 
 Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor)

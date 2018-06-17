@@ -162,6 +162,23 @@ def compute_basis_matrix(d,x_t,obs, R):
     # if d == 3:
     #     E[:,+1] = [0-nv(3)nv(2)]
     return E, Gamma
+ 
+# def limit_vel(dx, v_max=1, x, x_attractor):
+#     # Only start slowing down within radius of attractor 
+#     dx_2 = sum(dx**2)
+#     if v_max**2 > sum(dx**2): #velocity in normal range
+#         return dx
 
-def limit_vel():
+
+#     # Get zero values
+#     normXd = sqrt(sum(xd.^2,1));
+#     ind0 = normXd ~= 0
+
+#     xd[:,ind0] = xd(:,ind0).*np.tile(min(1./normXd(ind0),1)*velConst, (dim,1) )
+    
+#     xd[:,~ind0] = np.zeros(xd.shape[0] , x0.shape[1]) - ind0.shape[0] )
+    
+#     return dx/sqrt(dx_2)*v_max 
+    
+    
     
