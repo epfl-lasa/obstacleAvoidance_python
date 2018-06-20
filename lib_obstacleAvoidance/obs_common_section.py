@@ -1,3 +1,5 @@
+'''
+'''
 import numpy as np
 from numpy import linalg as LA
 
@@ -71,9 +73,11 @@ def obs_common_section(obs):
                 if obsCloseBy:
                     N_inter = intersection_sf[it_intersect].shape[0] # Number of intersection points
 
-                    # R = compute_R(d,obs[it_obs2].th_r)
+                    ## R = compute_R(d,obs[it_obs2].th_r)
                     Gamma_temp = ( (intersection_sf[it_intersect]-np.tile(obs[it_obs2].x0,(1,N_inter) ) )/ np.tile(obs[it_obs2].a,(N_inter)) ) ** (2*obs[it_obs2].p)
+                    
                     Gamma = np.array([sum(1/obs[it_obs2].sf*rotMat[:,:,it_obs2].T @ Gamma_temp[ii,:]) for ii in range(Gamma_temp.shape[1])])
+                    
                     ind = Gamma<1
                     if sum(ind):
                         intersection_sf[it_intersect] = intersection_sf[it_intersect][:,ind]
@@ -86,16 +90,17 @@ def obs_common_section(obs):
                     # get all points of obs2 in obs1
                     # R = compute_R(d,obs[it_obs1].th_r)
                     # \Gamma = \sum_[i=1]^d (xt_i/a_i)^(2p_i) = 1
-                    N_points = len(obs[it_obs1].x_obs_sf[0])
-                    Gamma_temp = (rotMat[:,:,it_obs1].T @  (np.array(obs[it_obs2].x_obs_sf)-np.tile(obs[it_obs1].x0,(N_points,1)).T ) / np.tile(obs[it_obs1].a, (N_points,1)).T )
+                    N_points = len(obs[it_obs1].x_obs_sf)
+                    
+                    Gamma_temp = (rotMat[:,:,it_obs1].T @  (np.array(obs[it_obs2].x_obs_sf).T-np.tile(obs[it_obs1].x0,(N_points,1)).T ) / np.tile(obs[it_obs1].a, (N_points,1)).T )
                     Gamma = np.sum( (1/obs[it_obs1].sf *  Gamma_temp) ** (2*np.tile(obs[it_obs1].p, (N_points,1)).T), axis=0) 
-                    intersection_sf_temp = np.array(obs[it_obs2].x_obs_sf[:,Gamma<1])
+                    intersection_sf_temp = np.array(obs[it_obs2].x_obs_sf)[Gamma<1,:].T
 
                     # Get all poinst of obs1 in obs2
                     #                 R = compute_R(d,obs[it_obs2].th_r)
-                    Gamma_temp = ( rotMat[:,:,it_obs2].T @ (np.array(obs[it_obs1].x_obs_sf)-np.tile(obs[it_obs2].x0,(N_points,1)).T ) / np.tile(obs[it_obs2].a, (N_points,1)).T )
+                    Gamma_temp = ( rotMat[:,:,it_obs2].T @ (np.array(obs[it_obs1].x_obs_sf).T-np.tile(obs[it_obs2].x0,(N_points,1)).T ) / np.tile(obs[it_obs2].a, (N_points,1)).T )
                     Gamma = np.sum(( 1/obs[it_obs2].sf *  Gamma_temp)  ** (2*np.tile(obs[it_obs2].p, (N_points,1)).T), axis=0 )
-                    intersection_sf_temp = np.hstack((intersection_sf_temp, obs[it_obs1].x_obs_sf[:,Gamma<1] ))
+                    intersection_sf_temp = np.hstack((intersection_sf_temp, np.array(obs[it_obs1].x_obs_sf)[Gamma<1,:].T ) )
 
                     if intersection_sf_temp.shape[1] > 0:
                         it_intersect = it_intersect + 1

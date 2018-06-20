@@ -98,7 +98,7 @@ def obs_check_collision_2d(obs_list, XX, YY):
     if len(obs_list) == 0:
         return
 
-    dim = 2 
+    d = 2 
 
     dim_points = XX.shape
     if len(dim_points)==1:

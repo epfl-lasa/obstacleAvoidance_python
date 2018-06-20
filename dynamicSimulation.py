@@ -46,6 +46,8 @@ from obs_common_section import *
 #from obs_dynamic_center import *
 from obs_dynamic_center_3d import *
 
+from matplotlib import animation
+plt.rcParams['animation.ffmpeg_path'] = '/usr/bin/ffmpeg'
 
 # --------------  Start script --------------
 print()
@@ -98,19 +100,21 @@ class Animated():
         
         self.N_points = x0.shape[1]
 
-        self.x_pos = np.zeros((self.dim, self.N_simuMax, self.N_points))
+        self.x_pos = np.zeros((self.dim, self.N_simuMax+2, self.N_points))
         
         self.x_pos[:,0,:] = x0
         
-        self.xd_ds = np.zeros(( self.dim, self.N_simuMax, self.N_points ))
+        self.xd_ds = np.zeros(( self.dim, self.N_simuMax+1, self.N_points ))
         #self.t = np.linspace(( 0, self.N_simuMax*self.dt, num=self.N_simuMax ))
-        self.t = np.linspace(0,self.N_simuMax,num=self.N_simuMax)
+        self.t = np.linspace(0,self.N_simuMax+1,num=self.N_simuMax+1)*dt
 
         self.converged = False
     
         self.iSim = 0
 
         self.lines = [] # Container to keep line plots
+        self.startPoints = [] # Container to keep line plots
+        self.endPoints = [] # Container to keep line plots        
         self.patches = [] # Container to keep patch plotes
         self.contour = []
         self.centers = []
@@ -122,33 +126,40 @@ class Animated():
         else:
             self.fig = plt.figure()
             self.ax = self.fig.add_subplot(111, projection='3d')
-        self.fig.set_size_inches(12, 9)
+        self.fig.set_size_inches(14, 9)
         
         self.ax.set_xlim(xRange)
         self.ax.set_ylim(yRange)
-        self.ax.set_xlabel('x1')
-        self.ax.set_ylabel('x2')
+        #self.ax.set_xlabel('x1')
+        #self.ax.set_ylabel('x2')
         if self.dim==3:
             self.ax.set_zlim(zRange)
             self.ax.set_zlabel('x3')
             #self.ax.view_init(elev=0.3, azim=0.4)
+
+
+
         
         # Set axis etc.
         plt.gca().set_aspect('equal', adjustable='box')
-            
+
+        #print('self.tt1')
+
         # Set up plot
         self.setup_plot()
+        #self.tt1 = self.ax.text(.5, 1.05, '', transform = self.ax.transAxes, va='center', animated=True, )
 
-        self.fig.canvas.mpl_connect('button_press_event', onClick)  # Button click enabled
-
+        
         # Adjust dynamic center
         intersection_obs = obs_common_section(self.obs)
         #dynamic_center(self.obs, intersection_obs)
         dynamic_center_3d(self.obs, intersection_obs)
+
         
-        # Then setup FuncAnimation.
-        self.ani = FuncAnimation(self.fig, self.update, interval=1, 
-                                           init_func=self.setup_plot, blit=True)
+        # Then setup FuncAnimation        
+        self.ani = FuncAnimation(self.fig, self.update, interval=1, frames = self.N_simuMax-2, repeat=False, init_func=self.setup_plot, blit=True, save_count=self.N_simuMax-2)
+
+        
 
     def setup_plot(self):
         print('setup started')
@@ -157,13 +168,15 @@ class Animated():
         
         # Numerical hull of ellipsoid
         for n in range(len(obs)):
-            obs[n].draw_ellipsoid() # 50 points resolution
+            obs[n].draw_ellipsoid(numPoints=50) # 50 points resolution
 
         for n in range(len(self.obs)):
             if self.dim==2:
-                self.obs_polygon.append( plt.Polygon(self.obs[n].x_obs, animated=True,))
+                sudoList = [[0,0] for i in range(50)]
+                #self.obs_polygon.append( plt.Polygon(self.obs[n].x_obs, animated=True,))
+                self.obs_polygon.append( plt.Polygon(sudoList, animated=True,))
                 self.obs_polygon[n].set_color(np.array([176,124,124])/255)
-                self.obs_polygon[n].set_alpha(0.3)
+                self.obs_polygon[n].set_alpha(0.8)
                 patch_o = plt.gca().add_patch(self.obs_polygon[n])
                 self.patches.append(patch_o)
 
@@ -171,7 +184,7 @@ class Animated():
                     cont, = plt.plot([],[],  'k--', animated=True)
                 else:
                     cont, = plt.plot([self.obs[n].x_obs_sf[0][ii] for ii in range(len(self.obs[n].x_obs_sf[0]))],
-                                     [self.obs[n].x_obs_sf[1][ii] for ii in range(len(self.obs[n].x_obs_sf[0]))],
+                                     [self.obs[n].x_obs_sf[1][ii] for ii in range(len(self.obs[n].x_obs_sf[1]))],
                                      'k--', animated=True)
                 self.contour.append(cont)
             else:
@@ -194,8 +207,14 @@ class Animated():
                 self.cent_dyns.append(cent_dyn)
                 
         for ii in range(self.N_points):
-            line, = plt.plot([], [], animated=True)
+            line, = plt.plot([], [], 'r--', lineWidth = 4, animated=True)
             self.lines.append(line)
+            point, = plt.plot(self.x_pos[0,0,ii],self.x_pos[1,0,ii], '*k', markersize=10, animated=True)
+            if self.dim==3:
+                point, = plt.plot(self.x_pos[0,0,ii],self.x_pos[1,0,ii], self.x_pos[2,0,ii], '*k', markersize=10, animated=True)
+            self.startPoints.append(point)
+            point, = plt.plot([], [], 'ro', markersize=15, animated=True)
+            self.endPoints.append(point)
 
 
         if self.dim==2:
@@ -203,19 +222,27 @@ class Animated():
         else:
             plt.plot([self.attractorPos[0]], [self.attractorPos[1]], [self.attractorPos[2]], 'k*', linewidth=7.0)
 
-        return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns)
+        self.fig.canvas.mpl_connect('button_press_event', onClick)  # Button click enabled
+
+        self.tt1 = self.ax.text(.5, 8.2, '', va='center', fontsize=20)
+
+        print('setup finished')
+
+        return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints + [self.tt1])
     
-    def update(self, dt):
+    
+    def update(self, iSim):
+        print('iteration num {} -- frame = {}'.format(self.iSim, iSim))
         if pause:        # NO ANIMATION -- PAUSE
             self.old_time=time.time()
-            return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns)
+            return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints)
 
         intersection_obs = obs_common_section(self.obs)
         dynamic_center_3d(self.obs, intersection_obs)
 
         # Calculate DS
         for j in range(self.N_points):
-            xd_temp = linearAttractor(self.x_pos[:,self.iSim, j], self.attractorPos)
+            xd_temp = linearAttractor_const(self.x_pos[:,self.iSim, j], self.attractorPos, velConst=1.6, distSlow=0.01)
             self.xd_ds[:,self.iSim,j] = obs_avoidance_convergence(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
         self.x_pos[:,self.iSim+1,:] = self.x_pos[:,self.iSim, :] + self.xd_ds[:,self.iSim, :]*self.dt
         self.t[self.iSim+1] = (self.iSim+1)*self.dt
@@ -226,6 +253,11 @@ class Animated():
             self.lines[j].set_ydata(self.x_pos[1,:self.iSim+1,j])
             if self.dim==3:
                 self.lines[j].set_3d_properties(zs=self.x_pos[2,:self.iSim+1,j])
+
+            self.endPoints[j].set_xdata(self.x_pos[0,self.iSim+1,j])
+            self.endPoints[j].set_ydata(self.x_pos[1,self.iSim+1,j])
+            if self.dim==3:
+                self.endPoints[j].set_3d_properties(zs=self.x_pos[2,self.iSim+1,j])
         
         # ========= Check collision ----------
         #collisions = obs_check_collision(self.x_pos[:,self.iSim+1,:], obs)
@@ -254,8 +286,8 @@ class Animated():
                     
             if obs[o].x_end > self.t[self.iSim]:
                 if self.dim ==2: # only show safety-contour in 2d, otherwise not easily understandable
-                    self.contour[o].set_xdata([self.obs[o].x_obs_sf[0][ii] for ii in range(len(self.obs[o].x_obs_sf[0]))])
-                    self.contour[o].set_ydata([self.obs[o].x_obs_sf[1][ii] for ii in range(len(self.obs[o].x_obs_sf[1]))])
+                    self.contour[o].set_xdata([self.obs[o].x_obs_sf[ii][0] for ii in range(len(self.obs[o].x_obs_sf))])
+                    self.contour[o].set_ydata([self.obs[o].x_obs_sf[ii][1] for ii in range(len(self.obs[o].x_obs_sf))])
 
                 if self.dim==2:
                     self.obs_polygon[o].xy = self.obs[o].x_obs
@@ -268,9 +300,12 @@ class Animated():
         self.old_time = self.sleep_const(self.old_time)
         self.pause_time = self.old_time
 
-        return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns)
+        self.tt1.set_text('{:2.2f} s'.format(round(self.t[self.iSim+1],2) ) )
+
+        return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints + [self.tt1] )
 
     def check_convergence(self):
+        #return
         self.lastConvergences[0] = self.lastConvergences[1]
         self.lastConvergences[1] = self.lastConvergences[2]
 
@@ -307,26 +342,24 @@ class Animated():
 #### Create starting points
 N = 3
 
-simuCase=0
+simuCase=2
 if simuCase==0:
     N = 10
     x_init = np.vstack((np.ones(N)*20,
                         np.linspace(-10,10,num=N) ))
-                        
     ### Create obstacle 
     obs = []
-
     a = [5, 2]
     p = [1, 1]
     x0 = [10.0, 0]
     th_r = 30/180*pi
     sf = 1.
 
-    xd=[0, 0]
+    #xd=[0, 0]
     w = 0
     x_start = 0
     x_end = 2
-    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end, w=w))
+    #obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end, w=w))
 
     a = [3,2]
     p = [1,1]
@@ -339,6 +372,43 @@ if simuCase==0:
     x_start = 0
     x_end = 2
     obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end, w=w))
+    a = [3,2]
+    p = [1,1]
+    x0 = [7,-6]
+    th_r = -40/180*pi
+    sf = 1.
+
+    xd=[0., 0]
+    w = 0
+    x_start = 0
+    x_end = 0
+    #obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end, w=w))
+    
+    ob2 = Obstacle(
+        a= [1,1],
+        p= [1,1],
+        x0= [10,-8],
+        th_r= -40/180*pi,
+        sf=1,
+        xd=[0, 0],
+        x_start=0,
+        x_end=0,
+        w=0
+    )
+    #obs.append(ob2)
+
+    ob3 = Obstacle(
+        a= [1,1],
+        p= [1,1],
+        x0= [14,-2],
+        th_r= -40/180*pi,
+        sf=1,
+        xd=[0, 0],
+        x_start=0,
+        x_end=0,
+        w=0
+    )
+    obs.append(ob3)
 
     xRange = [ -1,20]
     yRange = [-10,10]
@@ -384,12 +454,119 @@ elif simuCase==1:
     yRange = [-1,1]
     zRange = [-1,1]
 
+elif simuCase==2:
+    xRange = [0,16]
+    yRange = [0,9]
+    
+    N = 3
+    #x_init = np.vstack((np.ones(N)*16,
+    #                    np.linspace(0,9,num=N) ))
+    
+    
+    ### Create obstacle 
+    obs = []
+
+    x01 = [3.5,1]
+    a = [2.5,0.8]
+    p = [1,1]
+    th_r = -10
+    sf = 1.3
+
+    xd0=[0,0]
+    w0 = 0
+
+    x_start = 0
+    x_end = 10
+    obs.append(Obstacle(a=a, p=p, x0=x01,th_r=th_r, sf=sf, x_start=x_start, x_end=x_end, timeVariant=True))
+
+    def func_w1(t):
+        t_interval1 = [0, 2.5, 5, 7, 8, 10]
+        w1 = [th_r, -20, -140, -140, -170, -170]
+        
+        for ii in range(len(t_interval1)-1):
+            if t < t_interval1[ii+1]:
+                return (w1[ii+1]-w1[ii])/(t_interval1[ii+1]-t_interval1[ii]) * pi/180
+        return 0
+
+    def func_xd1(t):
+        t_interval1x = [0, 2.5, 5, 7, 8, 10]
+        xd1 = [[x01[0], 7, 9, 9, 7, 6],
+              [x01[1], 4, 5, 5, 4, -2]]
+
+        for ii in range(len(t_interval1x)-1):
+            if t < t_interval1x[ii+1]:
+                dt = (t_interval1x[ii+1]-t_interval1x[ii])
+                return [(xd1[0][ii+1]-xd1[0][ii])/dt, (xd1[1][ii+1]-xd1[1][ii])/dt]
+        return 0
+
+    obs[0].func_w = func_w1
+    obs[0].func_xd = func_xd1
+
+    x0 = [12,8]
+    a = [2,1.2]
+    p = [1,1]
+    th_r = 0
+    sf = 1.3
+
+    xd0=[0,0]
+    w0 = 0
+
+    x_start = 0
+    x_end = 10
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, x_start=x_start, x_end=x_end, timeVariant=True))
+
+    def func_w2(t):
+        t_interval = [0, 2., 6.5, 7, 10]
+        w = [th_r, -60, -60, 30, 30]
+        
+        for ii in range(len(t_interval)-1):
+            if t < t_interval[ii+1]:
+                return (w[ii+1]-w[ii])/(t_interval[ii+1]-t_interval[ii]) * pi/180
+        return 0
+
+    def func_xd2(t):
+        t_interval = [0, 2.0, 5, 6.5, 9, 10]
+        xd = [[x0[0], 13, 13, 12, 14, 15], 
+              [x0[1], 6, 6, 3, -2, -3 ]]
+
+        for ii in range(len(t_interval)-1):
+            if t < t_interval[ii+1]:
+                dt = (t_interval[ii+1]-t_interval[ii])
+                return [(xd[0][ii+1]-xd[0][ii])/dt, (xd[1][ii+1]-xd[1][ii])/dt]
+        return 0
+
+    obs[1].func_w = func_w2
+    obs[1].func_xd = func_xd2
+
+    x_init = np.array([[15.5],[0.2]])
+    attractorPos = [4,8]
+
+    
+    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.01, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01,attractorPos=attractorPos )
+    print('Animation Finished')
+
+    #dist slow = 0.18
+    #anim.ani.save('ani/simue.mpeg', writer="ffmpeg")
+    #FFwriter = animation.FFMpegWriter()
+    #anim.ani.save('ani/basic_animation.mp4', writer = FFwriter, fps=20)
+saveFigure = True
+if saveFigure:
+    anim.ani.save('ani/basic_animation.mp4', dpi=100,fps=50)
+    print('Saving finished.')
+else:
+    anim.show()
+
+plt.close('all')
+
 
 #if __name__ == '__main__':
-if True:
-    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, zRange=zRange, dt=0.005, N_simuMax=200000, convergenceMargin=0.3, sleepPeriod=0.01, )
-    anim.show()
+#if True:
+    #anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, zRange=zRange, dt=0.005, N_simuMax=200000, convergenceMargin=0.3, sleepPeriod=0.01, )
+    #
 
 print()
 print('---- Script finished ---- ')
 print() # THE END
+
+
+        

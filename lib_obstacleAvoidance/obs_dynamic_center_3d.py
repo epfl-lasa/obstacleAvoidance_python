@@ -26,7 +26,7 @@ def dynamic_center_3d(obs, intersection_obs, marg_dynCenter=1.3, N_distStep=3, r
     # MAYBE - Change to user fixed size -- replot first oneh
     x_obs_sf = []
     for ii in range(N_obs):
-        x_obs_sf.append(np.array( obs[ii].x_obs_sf))
+        x_obs_sf.append(np.array( obs[ii].x_obs_sf).T)
 
     N_closest=obs[0].d*numbFactor_closest # Number of close points which are considered for interpolation
     
@@ -66,7 +66,7 @@ def dynamic_center_3d(obs, intersection_obs, marg_dynCenter=1.3, N_distStep=3, r
             x_obs2 = x_obs2[0:-1, :]
             x_obs2 = np.tile((x_obs2), (resolution,1,1))
 
-            ref_dist = marg_dynCenter*0.5*np.sqrt(0.25*(np.sqrt(np.sum(obs[it1].a)^2+max(obs[it2].a)^2)))
+            ref_dist = marg_dynCenter*0.5*np.sqrt(0.25*(np.sqrt(np.sum(obs[it1].a)**2+max(obs[it2].a)**2)))
             
             # For ellipses:
             dist_contact = 0.5*(np.sqrt(np.sum(np.array(obs[it1].a)**2))) + np.sqrt(np.sum(np.array(obs[it2].a)**2))
@@ -131,7 +131,8 @@ def dynamic_center_3d(obs, intersection_obs, marg_dynCenter=1.3, N_distStep=3, r
             
             # Desired Gamma in (0,1) to be on obstacle
             #Gamma_dynCenter = max([1-delta_dist/(ref_dist-dist_contact),0])
-            Gamma_dynCenter = np.maximum(1-minDist/(ref_dist-dist_contact),0)
+            powerCent = 0.5
+            Gamma_dynCenter = np.maximum(1-minDist/(ref_dist-dist_contact),0)**powerCent
 
             x_cyn_temp[:,it1,it2] = np.zeros((obs[it1].d))
             x_cyn_temp[:,it2,it1] = np.zeros((obs[it1].d))

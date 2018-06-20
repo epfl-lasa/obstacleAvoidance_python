@@ -25,3 +25,15 @@ def linearAttractor(x, x0='default'):
     xd = -(x-x0)
     
     return xd
+
+
+def linearAttractor_const(x, x0 = 'default', velConst=0.3, distSlow=0.01):
+    # change initial value for n dimensions
+    # TODO -- constant velocity // maximum velocity
+    
+    dx = x0-x
+    dx_mag = np.sqrt(np.sum(dx**2))
+    
+    dx = min(velConst, 1/dx_mag*velConst)*dx
+
+    return dx

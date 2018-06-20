@@ -31,8 +31,8 @@ class Obstacle:
         self.timeVariant = timeVariant
         if self.timeVariant:
             # TODO implement functions
-            func_xd = 0
-            func_w = 0
+            self.func_xd = 0
+            self.func_w = 0
 
         
         if sum(np.abs(xd)) or w or self.timeVariant:
@@ -57,8 +57,8 @@ class Obstacle:
                 # Check if xd and w are functions
                 if self.timeVariant:
                     # TODO - implement RK4 for movement
-                    self.xd = func_xd(t)
-                    self.w = func_w(t)
+                    self.xd = self.func_xd(t)
+                    self.w = self.func_w(t)
                     
                 self.x0 = [self.x0[i] + dt*self.xd[i] for i in range(self.d)] # update position
 
@@ -78,7 +78,7 @@ class Obstacle:
         if self.d == 2:
             theta = np.linspace(-pi,pi, num=numPoints)
             resolution = numPoints # Resolution of drawing #points
-            #numPoints = numPoints
+            
         else:
             numPoints = [numPoints, ceil(numPoints/2)]
             theta, phi = np.meshgrid(np.linspace(-pi,pi, num=numPoints[0]),np.linspace(-pi/2,pi/2,num=numPoints[1]) ) #
@@ -132,14 +132,14 @@ class Obstacle:
         if type(self.sf) == int or type(self.sf) == float:
             x_obs_sf = R @ (self.sf*x_obs) + np.tile(np.array([self.x0]).T,(1,numPoints))
         else:
-            x_obs_sf = R@(x_obs*np.tile(self.sf,(1,numPoints))) + np.tile(self.x0, (numPoints,1)).T 
-            
+            x_obs_sf = R @ (x_obs*np.tile(self.sf,(1,numPoints))) + np.tile(self.x0, (numPoints,1)).T 
+
         x_obs = R @ x_obs + np.tile(np.array([self.x0]).T,(1,numPoints))
         
         
         if sum(a_temp) == 0:
             self.x_obs = x_obs.T.tolist()
-            self.x_obs_sf = x_obs_sf
+            self.x_obs_sf = x_obs_sf.T.tolist()
         else:
              return x_obs_sf
          
