@@ -4,7 +4,7 @@ from math import pi, cos, sin, copysign
 import warnings
 
 import sys 
-lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm_python/lib_obstacleAvoidance/"
+lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
     

@@ -25,14 +25,9 @@ def obs_common_section(obs):
     # Ext for more dimensions
     d = len(obs[0].x0)
 
-    N_points = 12 # Choose number of points each iteration
+    N_points = 30 # Choose number of points each iteration
     Gamma_steps = 5 # Increases computational cost
     
-    # figure(11)
-    # clf('reset')
-    # for ii = 1:size(x_obs_sf,3)
-    #     plot(x_obs_sf(1,:,ii),x_obs_sf(2,:,ii),'b.') hold on
-
     rotMat = np.zeros((d,d, N_obs))
     
     for it_obs in range(N_obs):
@@ -63,30 +58,32 @@ def obs_common_section(obs):
                 obsCloseBy = False
 
                 # Roughly check dimensions before starting expensive calculation
-                for ii in intersection_obs:
-                    if it_intersect[ii]:
-                        if LA.norm(obs[ii].x0 - obs[it_obs2].x0) < max(obs[ii].a) + max(obs[it_obs2].a):
-                            # Obstacles to far apart
-                            obsCloseBy = True
-                            break
+                #for ii in intersection_obs:
+                    # if it_intersect[ii]:
+                    #     if LA.norm(obs[ii].x0 - obs[it_obs2].x0) < np.lina(obs[ii].a)*obs[ii].sf + np.linalg.norm(obs[it_obs2].a)*obs[it_obs2].sf:
+                    #         # Obstacles to far apart
+                    #         obsCloseBy = True
+                    #         break
 
-                if obsCloseBy:
-                    N_inter = intersection_sf[it_intersect].shape[0] # Number of intersection points
+                #if obsCloseBy:
+                if True:
+                    N_inter = intersection_sf[it_intersect].shape[1] # Number of intersection points
 
                     ## R = compute_R(d,obs[it_obs2].th_r)
-                    Gamma_temp = ( (intersection_sf[it_intersect]-np.tile(obs[it_obs2].x0,(1,N_inter) ) )/ np.tile(obs[it_obs2].a,(N_inter)) ) ** (2*obs[it_obs2].p)
-                    
-                    Gamma = np.array([sum(1/obs[it_obs2].sf*rotMat[:,:,it_obs2].T @ Gamma_temp[ii,:]) for ii in range(Gamma_temp.shape[1])])
-                    
+                    Gamma_temp = ( rotMat[:,:,it_obs2].T @(intersection_sf[it_intersect]-np.tile(obs[it_obs2].x0,(N_inter,1)).T )/ np.tile(obs[it_obs2].a,(N_inter,1)).T ) ** (2*np.tile(obs[it_obs2].p,(N_inter,1)).T)
+                    Gamma = np.sum( 1/obs[it_obs2].sf *Gamma_temp, axis=0 )
+
                     ind = Gamma<1
+                    #import pdb; pdb.set_trace() ## DEBUG ##
+                    
                     if sum(ind):
                         intersection_sf[it_intersect] = intersection_sf[it_intersect][:,ind]
                         intersection_obs[it_intersect] = intersection_obs[it_intersect] + [it_obs2]
             else:
                 # Roughly check dimensions before starting expensive calculation
-                
-                if sqrt(sum((np.array(obs[it_obs1].x0)-np.array(obs[it_obs2].x0))**2)) < max(obs[it_obs1].a) + max(obs[it_obs2].a): # Obstacles are close enough
-
+                #if sqrt(sum((np.array(obs[it_obs1].x0)-np.array(obs[it_obs2].x0))**2)) < max(obs[it_obs1].a)*obs[it_obs1].sf + max(obs[it_obs2].a)*obs[it_obs2].sf: # Obstacles are close enough
+                if True:
+                    
                     # get all points of obs2 in obs1
                     # R = compute_R(d,obs[it_obs1].th_r)
                     # \Gamma = \sum_[i=1]^d (xt_i/a_i)^(2p_i) = 1
@@ -137,13 +134,15 @@ def obs_common_section(obs):
                             if 1 > sum( (1/obs[it_obs2_].sf*rotMat[:,:,it_obs2_].T @ ( np.array(obs[it_obs1_].x0) - np.array(obs[it_obs2_].x0) )/ np.array(obs[it_obs2_].a) ) ** (2*np.array(obs[it_obs2_].p))):
                                 intersection_sf[it_intersect] = np.hstack([intersection_sf[it_intersect],np.tile(obs[it_obs1_].x0,(1,1)).T ] )
 
+                                    
+
     #if intersection_with_obs1 continue 
     if len(intersection_sf)==0:
         return  []
 
     #plt.plot(intersection_sf[0][0,:], intersection_sf[0][1,:], 'r.')
     
-    
+    #import pdb; pdb.set_trace() ## DEBUG ##
     for ii in range(len(intersection_obs)):
     #     plot(intersection_sf[ii](1,:),intersection_sf[ii](2,:),'x')
         intersection_sf[ii] = np.unique(intersection_sf[ii], axis=1)

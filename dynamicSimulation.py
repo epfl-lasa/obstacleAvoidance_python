@@ -30,11 +30,11 @@ import sys
 # ---------- Import Custom libraries ----------
 from dynamicalSystem_lib import *
 
-lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm_python/lib_obstacleAvoidance/"
+lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 
-lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm_python/"
+lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/"
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 
@@ -78,6 +78,9 @@ class Animated():
     def __init__(self, x0, obs=[], N_simuMax = 600, dt=0.01, attractorPos='default', convergenceMargin=0.01, xRange=[-10,10], yRange=[-10,10], zRange=[-10,10], sleepPeriod=0.03):
 
         self.dim = x0.shape[0]
+
+        #self.simuColors=[]
+
         
         # Initialize class variables
         self.obs = obs
@@ -126,7 +129,8 @@ class Animated():
         else:
             self.fig = plt.figure()
             self.ax = self.fig.add_subplot(111, projection='3d')
-        self.fig.set_size_inches(14, 9)
+        #self.fig.set_size_inches(14, 9)
+        self.fig.set_size_inches(12, 8)
         
         self.ax.set_xlim(xRange)
         self.ax.set_ylim(yRange)
@@ -146,20 +150,18 @@ class Animated():
         #print('self.tt1')
 
         # Set up plot
-        self.setup_plot()
+        #self.setup_plot()
         #self.tt1 = self.ax.text(.5, 1.05, '', transform = self.ax.transAxes, va='center', animated=True, )
 
         
         # Adjust dynamic center
-        intersection_obs = obs_common_section(self.obs)
+        #intersection_obs = obs_common_section(self.obs)
         #dynamic_center(self.obs, intersection_obs)
-        dynamic_center_3d(self.obs, intersection_obs)
+        #dynamic_center_3d(self.obs, intersection_obs)
 
         
         # Then setup FuncAnimation        
         self.ani = FuncAnimation(self.fig, self.update, interval=1, frames = self.N_simuMax-2, repeat=False, init_func=self.setup_plot, blit=True, save_count=self.N_simuMax-2)
-
-        
 
     def setup_plot(self):
         print('setup started')
@@ -172,9 +174,9 @@ class Animated():
 
         for n in range(len(self.obs)):
             if self.dim==2:
-                sudoList = [[0,0] for i in range(50)]
+                emptyList = [[0,0] for i in range(50)]
                 #self.obs_polygon.append( plt.Polygon(self.obs[n].x_obs, animated=True,))
-                self.obs_polygon.append( plt.Polygon(sudoList, animated=True,))
+                self.obs_polygon.append( plt.Polygon(emptyList, animated=True,))
                 self.obs_polygon[n].set_color(np.array([176,124,124])/255)
                 self.obs_polygon[n].set_alpha(0.8)
                 patch_o = plt.gca().add_patch(self.obs_polygon[n])
@@ -183,8 +185,8 @@ class Animated():
                 if self.obs[n].x_end > 0:
                     cont, = plt.plot([],[],  'k--', animated=True)
                 else:
-                    cont, = plt.plot([self.obs[n].x_obs_sf[0][ii] for ii in range(len(self.obs[n].x_obs_sf[0]))],
-                                     [self.obs[n].x_obs_sf[1][ii] for ii in range(len(self.obs[n].x_obs_sf[1]))],
+                    cont, = plt.plot([self.obs[n].x_obs_sf[ii][0] for ii in range(len(self.obs[n].x_obs_sf))],
+                                     [self.obs[n].x_obs_sf[ii][1] for ii in range(len(self.obs[n].x_obs_sf))],
                                      'k--', animated=True)
                 self.contour.append(cont)
             else:
@@ -205,15 +207,15 @@ class Animated():
             if hasattr(self.obs[n], 'center_dyn'):# automatic adaptation of center
                 cent_dyn, = self.ax.plot([],[], 'k+', animated=True)
                 self.cent_dyns.append(cent_dyn)
-                
+        
         for ii in range(self.N_points):
-            line, = plt.plot([], [], 'r--', lineWidth = 4, animated=True)
+            line, = plt.plot([], [], '--', lineWidth = 4, animated=True)
             self.lines.append(line)
             point, = plt.plot(self.x_pos[0,0,ii],self.x_pos[1,0,ii], '*k', markersize=10, animated=True)
             if self.dim==3:
                 point, = plt.plot(self.x_pos[0,0,ii],self.x_pos[1,0,ii], self.x_pos[2,0,ii], '*k', markersize=10, animated=True)
             self.startPoints.append(point)
-            point, = plt.plot([], [], 'ro', markersize=15, animated=True)
+            point, = plt.plot([], [], 'bo', markersize=15, animated=True)
             self.endPoints.append(point)
 
 
@@ -232,19 +234,29 @@ class Animated():
     
     
     def update(self, iSim):
+        #if saveFigure:
         print('iteration num {} -- frame = {}'.format(self.iSim, iSim))
         if pause:        # NO ANIMATION -- PAUSE
             self.old_time=time.time()
             return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints)
 
-        intersection_obs = obs_common_section(self.obs)
-        dynamic_center_3d(self.obs, intersection_obs)
+        #intersection_obs = obs_common_section(self.obs)
+        #dynamic_center_3d(self.obs, intersection_obs)
 
-        # Calculate DS
-        for j in range(self.N_points):
-            xd_temp = linearAttractor_const(self.x_pos[:,self.iSim, j], self.attractorPos, velConst=1.6, distSlow=0.01)
-            self.xd_ds[:,self.iSim,j] = obs_avoidance_convergence(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
-        self.x_pos[:,self.iSim+1,:] = self.x_pos[:,self.iSim, :] + self.xd_ds[:,self.iSim, :]*self.dt
+        RK4_int = True
+        if RK4_int: # Runge kutta integration
+            for j in range(self.N_points):
+                self.x_pos[:, self.iSim+1,j] = obs_avoidance_rk4(self.dt, self.x_pos[:,self.iSim,j], self.obs, x0=self.attractorPos)
+        else: # Simple euler integration
+            # Calculate DS
+            for j in range(self.N_points):
+                xd_temp = linearAttractor_const(self.x_pos[:,self.iSim, j], self.attractorPos, velConst=1.6, distSlow=0.01)
+                #self.xd_ds[:,self.iSim,j] = obs_avoidance_convergence(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
+                self.xd_ds[:,self.iSim,j] = obs_avoidance_interpolation(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
+                #self.xd_ds[:,self.iSim,j] = obs_avoidance_interpolation_bad(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
+            self.x_pos[:,self.iSim+1,:] = self.x_pos[:,self.iSim, :] + self.xd_ds[:,self.iSim, :]*self.dt
+        
+                
         self.t[self.iSim+1] = (self.iSim+1)*self.dt
 
         # Update lines
@@ -283,8 +295,8 @@ class Animated():
                 if self.dim==3:
                     self.cent_dyns[o].set_3d_properties(zs=obs[o].center_dyn[2])
 
-                    
-            if obs[o].x_end > self.t[self.iSim]:
+
+            if obs[o].x_end > self.t[self.iSim] or self.iSim<1: # First round or moving
                 if self.dim ==2: # only show safety-contour in 2d, otherwise not easily understandable
                     self.contour[o].set_xdata([self.obs[o].x_obs_sf[ii][0] for ii in range(len(self.obs[o].x_obs_sf))])
                     self.contour[o].set_ydata([self.obs[o].x_obs_sf[ii][1] for ii in range(len(self.obs[o].x_obs_sf))])
@@ -338,18 +350,18 @@ class Animated():
 #if __name__ == '__main__':
     #a = AnimatedScatter()
 #    a.show()
-
+#plt.ion()
 #### Create starting points
 N = 3
 
-simuCase=2
+simuCase=5
 if simuCase==0:
     N = 10
     x_init = np.vstack((np.ones(N)*20,
                         np.linspace(-10,10,num=N) ))
     ### Create obstacle 
     obs = []
-    a = [5, 2]
+    a = [5, 2] 
     p = [1, 1]
     x0 = [10.0, 0]
     th_r = 30/180*pi
@@ -370,7 +382,8 @@ if simuCase==0:
     xd=[0.25, 1]
     w = 0
     x_start = 0
-    x_end = 2
+    x_end = 10
+    
     obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end, w=w))
     a = [3,2]
     p = [1,1]
@@ -414,6 +427,10 @@ if simuCase==0:
     yRange = [-10,10]
     zRange = [-10,10]
     #obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+    attractorPos = [0,0]
+
+    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.05, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01,attractorPos=attractorPos )
     
 elif simuCase==1:
     N = 10
@@ -454,19 +471,94 @@ elif simuCase==1:
     yRange = [-1,1]
     zRange = [-1,1]
 
-elif simuCase==2:
+
+elif simuCase ==2:
+    xRange = [-0.7,0.3]
+    yRange = [2.3,3.0]
+    
+    xRange = [-3,3]
+    yRange = [-3,3.0]
+
+    N = 10
+    #x_init = np.vstack((np.linspace(-.19,-0.16,num=N),
+    # np.ones(N)*2.65))
+
+    x_init = np.vstack((np.linspace(-3,-1,num=N),
+                        np.ones(N)*0))
+                        
+    xAttractor = np.array([0,0])
+
+    obs = []
+    
+    obs.append(Obstacle(a=[1.1, 1],
+                        p=[1,1],
+                        x0=[0.5,1.5],
+                        th_r=-25*pi/180,
+                        sf=1.0
+    ))
+    
+    a = [0.2,5]
+    p = [1,1]
+    x0 = [0.5, 5]
+    th_r = -25/180*pi
+    sf = 1.0
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.003, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
+
+    
+elif simuCase ==3:
+    xRange = [-0.7,0.3]
+    yRange = [2.3,3.0]
+    
+    xRange = [-4,4]
+    yRange = [-0.1,6.0]
+
+    N = 20
+    x_init = np.vstack((np.linspace(-4.5,4.5, num=N),
+                        np.ones(N)*5.5))
+                       
+                        
+    xAttractor = np.array([0,0])
+
+    obs = []
+    obs.append(Obstacle(
+        a = [1.1,1.2],
+        p = [1,1],
+        x0 = [-1, 1.5],
+        th_r = -25/180*pi,
+        sf = 1.0
+        ))
+    
+    obs.append(Obstacle(
+        a = [1.8,0.4],
+        p = [1,1],
+        x0 = [0, 4],
+        th_r = 20/180*pi,
+        sf = 1.0,
+        ))
+    
+    obs.append(Obstacle(
+        a=[1.2,0.4],
+        p=[1,1],
+        x0=[3,3],
+        th_r=-30/180*pi,
+        sf=1.0 
+        ))
+
+    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.02, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
+
+elif simuCase==4:
     xRange = [0,16]
     yRange = [0,9]
     
-    N = 3
+    N = 4
     #x_init = np.vstack((np.ones(N)*16,
-    #                    np.linspace(0,9,num=N) ))
-    
+    #                    np.linspace(0,9,num=N) ))b
     
     ### Create obstacle 
     obs = []
-
-    x01 = [3.5,1]
+    x0 = [3.5,1]
     a = [2.5,0.8]
     p = [1,1]
     th_r = -10
@@ -541,22 +633,78 @@ elif simuCase==2:
     x_init = np.array([[15.5],[0.2]])
     attractorPos = [4,8]
 
-    
     anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.01, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01,attractorPos=attractorPos )
     print('Animation Finished')
+
+elif simuCase==5:
+    
+    xRange = [-4,4]
+    yRange = [-0.1,6.0]
+
+    N = 100
+
+    dx = xRange[1]-xRange[0]
+    dy = yRange[1]-yRange[0]
+
+    N_x = ceil(dx/(2*(dx+dy))*N)
+    N_y = ceil(dx/(2*(dx+dy))*N)
+
+    x_init = np.vstack((np.linspace(xRange[0],xRange[1], num=N_x),
+                        np.ones(N_x)*yRange[0]) )
+
+    x_init = np.hstack((x_init, 
+                        np.vstack((np.linspace(xRange[0],xRange[1], num=N_x),
+                                   np.ones(N_x)*yRange[1] )) ))
+
+    x_init = np.hstack((x_init, 
+                        np.vstack((np.ones(N_y)*xRange[0],
+                                   np.linspace(yRange[0],yRange[1], num=N_y) )) ))
+
+    x_init = np.hstack((x_init, 
+                        np.vstack((np.ones(N_y)*xRange[1],
+                                   np.linspace(yRange[0],yRange[1], num=N_y) )) ))
+                        
+    xAttractor = np.array([0,0])
+
+    obs = []
+    obs.append(Obstacle(
+        a = [1.1,1.2],
+        p = [1,1],
+        x0 = [-1, 1.5],
+        th_r = -25/180*pi,
+        sf = 1.0
+        ))
+    
+    obs.append(Obstacle(
+        a = [1.8,0.4],
+        p = [1,1],
+        x0 = [0, 4],
+        th_r = 20/180*pi,
+        sf = 1.0,
+        ))
+    
+    obs.append(Obstacle(
+        a=[1.2,0.4],
+        p=[1,1],
+        x0=[3,3],
+        th_r=-30/180*pi,
+        sf=1.0 
+        ))
+
+    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.02, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
 
     #dist slow = 0.18
     #anim.ani.save('ani/simue.mpeg', writer="ffmpeg")
     #FFwriter = animation.FFMpegWriter()
     #anim.ani.save('ani/basic_animation.mp4', writer = FFwriter, fps=20)
-saveFigure = True
+
+saveFigure = False
 if saveFigure:
     anim.ani.save('ani/basic_animation.mp4', dpi=100,fps=50)
     print('Saving finished.')
+    plt.close('all')
 else:
     anim.show()
-
-plt.close('all')
 
 
 #if __name__ == '__main__':
@@ -567,6 +715,3 @@ plt.close('all')
 print()
 print('---- Script finished ---- ')
 print() # THE END
-
-
-        

@@ -10,7 +10,6 @@ import warnings
 
 from math import cos, sin
 
-
          
 def compute_R(d, th_r):
     if th_r == 0:
@@ -94,10 +93,6 @@ def compute_weights(distMeas, N=0, distMeas_min=1, weightType='inverseGamma'):
 
 
 def obs_check_collision_2d(obs_list, XX, YY):
-    # No obstacles
-    if len(obs_list) == 0:
-        return
-
     d = 2 
 
     dim_points = XX.shape
@@ -105,7 +100,11 @@ def obs_check_collision_2d(obs_list, XX, YY):
         N_points = dim_points[0]
     else:
         N_points = dim_points[0]*dim_points[1]
-    
+
+    # No obstacles
+    if len(obs_list) == 0:
+        return np.ones((dim_points))
+        
     points = np.array(([np.reshape(XX,(N_points,)) , np.reshape(YY, (N_points,)) ] ))
     # At the moment only implemented for 2D
     collision = np.zeros( dim_points )

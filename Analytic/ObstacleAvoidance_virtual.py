@@ -50,7 +50,7 @@ l_n = Symbol('l_n') # Direction of tangent
 #l_t, l_n = symbols('l_t, l_n', cls=Function)
 
 # -------------------- Linear System --------------------
-f_x = Matrix([-x1,-x2])
+f_x = -1.0*k*Matrix([x1,x2])
 #f_x = k2(x1(t),x2(t))*Matrix([-x1(t),-x2(t)])
 
 
@@ -69,7 +69,7 @@ D = Matrix([[l_n(x1,x2), 0], [0, l_t(x1,x2)]])
 E = Matrix([[n[0], t1(x1,x2)],[n[1], t2(x1,x2)]])                   
 
 # Modulation Matrix
-M = -k*E @ D @ E.inv()
+M = E @ D @ E.inv()
 
 # -------------------- Evaluation --------------------
 x_dot = simplify(M @ f_x)
@@ -93,17 +93,29 @@ detM = simplify(M_sym[0,0]*M_sym[1,1] - M_sym[0,1]*M_sym[1,0])
 
 detM_str = str(detM)
 detM_str = str.replace(detM_str, "(x1, x2)", "")
-detM_str = str.replace(detM_str, "(x1, x2)", "")
+traM_str = str(traM)
+traM_str = str.replace(traM_str, "(x1, x2)", "")
 
 print('')
 print('trace M')
-print(traM)
+print(traM_str)
 print('')
 
 print('')
 print('det M')
-print(detM)
+print(detM_str)
 print('')
+
+
+# detM_str =
+# (1.0*(x2*l_n*t1 + (d1 - x1)*l_t*t2) *(x2*l_t*t1 + (d1 - x1)*l_n*t2)
+# -
+# 0.25*(x2*l_n*t2 - x2*l_t*t2 + (d1 - x1)*l_n*t1 - (d1 - x1)*l_t*t1)**2)
+#
+# /
+#
+# (x2*t1 + (d1 - x1)*t2)**2
+
 
 detM2 = k**2*(1.0 *
 (x2*l_n*t1 + (d1 - x1)*l_t*t2)
