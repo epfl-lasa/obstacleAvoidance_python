@@ -47,7 +47,7 @@ def pltLines(pos0, pos1, xlim=[-100,100], ylim=[-100,100]):
     
     plt.plot(xlim, ylim, '--', color=[0.3,0.3,0.3], linewidth=2)
 
-options = [-1]
+options = [6]
 for option in options:
     if option==-1:
 
@@ -311,3 +311,25 @@ for option in options:
         obs=[]
         obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='movingObstacle_notMoving', obs_avoidance_func=obs_avoidance_interpolation_moving, drawVelArrow=True)
+
+    if option==6:
+        # Obstacles being overlapping an being perpendicular or parallel to flow 
+        N_points = 100
+        saveFigures=False
+
+        xlim = [-1,4]
+        ylim = [-2,2]
+
+        ### Three obstacles touching - convergence
+        xAttractor = np.array([0,0])
+        
+        obs = []
+        a = [0.4,1.5]
+        p = [1,1]
+        x0 = [1.6, 0.0]
+        th_r = +0/180*pi
+        sf = 1.0
+        xd = [-3,3]
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='movingObstacle_notMoving', obs_avoidance_func=obs_avoidance_radialDisplace)

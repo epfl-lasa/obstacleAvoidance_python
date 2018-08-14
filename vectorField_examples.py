@@ -2,35 +2,60 @@
 ### -------------------------------------------------
 # Start main function
 #plt.close("all") # close figures
+
+# Command to automatically reload libraries -- in ipython before exectureion
+import numpy as np
+import matplotlib.pyplot as plt
+
+#from math import sin, cos, atan2,
+#first change the cwd to the script path
+#scriptPath = os.path.realpath(os.path.dirname(sys.argv[0]))
+#os.chdir(scriptPath)
+
+import sys
  
-options=[]
+# Custom libraries
+from dynamicalSystem_lib import *
+
+
+lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
+if not any (lib_string in s for s in sys.path):
+    sys.path.append(lib_string)
+
+from simulationVectorFields import *
+
+options=[9]
 for option in options:
     if option==0:
+
+        xlim = [-0.1,8]
+        ylim = [-3,3]
+
+        xAttractor=[0,0]
+
+        N_points=50
+        saveFigures=False
+
         obs = []
-
-        a=[0.2, 1]
-        p=[3,3]
-        x0=[1.5,1]
-        th_r=0/180*pi
+        a=[0.3, 2.5]
+        p=[1,1]
+        x0=[2,0]
+        th_r=-50/180*pi
         sf=1
-
-        xd=[5,0]
-        x_start = 0
-        x_end = 2
-        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end))
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
         #obs[n].center_dyn = np.array([2,1.4])
 
         # Obstacle 2
-        a = [0.4,0.2]
-        p = [4,4]
-        x0 = [1.9,1.3]
-        th_r = 0/180*pi
+        a = [0.4,2.5]
+        p = [1,1]
+        x0 = [6,0]
+        th_r = 50/180*pi
         sf = 1
         obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
         #obs[n].center_dyn = np.array([2,1.4])
 
-        xlim = [-1,4]
-        ylim = [-0.1,3]
+        
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='twoskewEllipses', noTicks=True)
 
     if option==1:
         ### Create obstacle 
@@ -272,9 +297,9 @@ for option in options:
         centr = [2, 2.5]
 
         obs = []
-        N = 8
+        N = 16
         R = 5
-        th_r0 = 20/180*pi
+        th_r0 = 35/180*pi
         rCent=2.4
         for n in range(N):
             obs.append(Obstacle(
@@ -291,13 +316,13 @@ for option in options:
         xlim = [-10,10]
         ylim = [-8,8]
 
-        xlim = [-4,0]
-        ylim = [-8,-4]
+        xlim = [-3,3]
+        ylim = [-7,-3]
 
         #xlim = [-0.7, 0.3]
         #ylim = [2.3,3.0]
 
-        N_points = 50
+        N_points = 100
 
 #        Simulation_vectorFields(xlim, ylim, N_points, [obs[0]], xAttractor=xAttractor, saveFigure=True, figName='linearCombination_obstacle0_zoom', noTicks=False)
 

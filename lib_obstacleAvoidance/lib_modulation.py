@@ -97,8 +97,8 @@ def obs_avoidance_convergence(x, xd, obs):
     #     if isfield(obs[n],'eigenvalue')
     #         d0 = obs[n].eigenvalue
     #     else:
-        print('d0', d0)
-        print('E', E)
+        #print('d0', d0)
+        #print('E', E)
         d0 = np.ones((E.shape[1]-1))
 
         if Gamma[n]==0:
@@ -239,6 +239,7 @@ def obs_avoidance_interpolation(x, xd, obs):
         if kfn_norm:#nonzero
             k_fn = k_fn/ kfn_norm
 
+            
         sumHat = np.sum(xd_hat_n*xd_n)
         if sumHat > 1 or sumHat < -1:
             sumHat = max(min(sumHat, 1), -1)
@@ -264,9 +265,8 @@ def obs_avoidance_interpolation(x, xd, obs):
     if norm_kd: #nonzero
         n_xd = Rf.T @ np.hstack((np.cos(norm_kd), np.sin(norm_kd)/norm_kd*k_d ))
     else:
-        n_xd = np.zeros((d))
-        n_xd[0] = 1
-
+        n_xd = Rf.T @  np.hstack((1, np.zeros((d-1)) ))
+        
     xd = xd_mag*n_xd.squeeze()
     
     #if LA.norm(M*xd)>0.05:
@@ -552,6 +552,11 @@ def obs_avoidance_interpolation_bad(x, xd, obs):
 
 
 
+
+
+
+
+
 def compute_basis_matrix(d,x_t,obs, R):
     # For an arbitrary shape, the next two lines are used to find the shape segment
     th = np.arctan2(x_t[1],x_t[0])
@@ -632,6 +637,8 @@ def compute_basis_matrix(d,x_t,obs, R):
 
 
 def obs_avoidance_rk4(dt, x, obs, obs_avoidance=obs_avoidance_interpolation, ds=linearAttractor, x0='default'):
+    # TODO -- add prediction of obstacle movement.
+    
     # k1
     xd = ds(x, x0)
     xd = obs_avoidance(x, xd, obs)
@@ -645,7 +652,7 @@ def obs_avoidance_rk4(dt, x, obs, obs_avoidance=obs_avoidance_interpolation, ds=
     # k3
     xd = ds(x+0.5*k2, x0)
     xd = obs_avoidance(x+0.5*k2, xd, obs)
-    k3 = dt*x
+    k3 = dt*xd
 
     # k4
     xd = ds(x+k3, x0)
