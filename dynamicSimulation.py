@@ -182,8 +182,8 @@ class Animated():
                                      [self.obs[n].x_obs_sf[ii][1] for ii in range(len(self.obs[n].x_obs_sf))],
                                      'k--', animated=True)
                 self.contour.append(cont)
-            else:
-                N_resol=50 # TODO  save internally from assigining....
+            else: # 3d
+                N_resol=50 # TODO  save as part of obstacle class internally from assigining....
                 self.obs_polygon.append(
                     self.ax.plot_surface(
                         np.reshape([obs[n].x_obs[i][0] for i in range(len(obs[n].x_obs))],

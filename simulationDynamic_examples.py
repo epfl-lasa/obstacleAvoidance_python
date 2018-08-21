@@ -1,9 +1,11 @@
+#!/usr/bin/python3
 import sys
- 
-# ---------- Import Custom libraries ----------
 
-lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
-if not any (lib_string in s for s in sys.path):
+import numpy as np
+
+# ---------- Import Custom libraries ----------
+lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgorithm/lib_obstacleAvoidance/"
+if not any(lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 
 from class_obstacle import *
@@ -17,7 +19,6 @@ from dynamicSimulation import *
 
 N = 3
 
-
 def samplePointsAtBorder(N, xRange, yRange):
     # Draw points evenly spaced at border
     dx = xRange[1]-xRange[0]
@@ -26,17 +27,17 @@ def samplePointsAtBorder(N, xRange, yRange):
     N_x = ceil(dx/(2*(dx+dy))*(N))+2
     N_y = ceil(dx/(2*(dx+dy))*(N))-0
 
-    x_init = np.vstack((np.linspace(xRange[0],xRange[1], num=N_x),
-                        np.ones(N_x)*yRange[0]) )
+    x_init = np.vstack((np.linspace(xRange[0], xRange[1], num=N_x),
+                        np.ones(N_x)*yRange[0]))
 
-    x_init = np.hstack((x_init, 
-                        np.vstack((np.linspace(xRange[0],xRange[1], num=N_x),
-                                   np.ones(N_x)*yRange[1] )) ))
+    x_init = np.hstack((x_init,
+                        np.vstack((np.linspace(xRange[0], xRange[1], num=N_x),
+                                   np.ones(N_x)*yRange[1]))))
 
-    ySpacing=(yRange[1]-yRange[0])/(N_y+1)
-    x_init = np.hstack((x_init, 
+    ySpacing = (yRange[1]-yRange[0])/(N_y+1)
+    x_init = np.hstack((x_init,
                         np.vstack((np.ones(N_y)*xRange[0],
-                                   np.linspace(yRange[0]+ySpacing,yRange[1]-ySpacing, num=N_y) )) ))
+                                   np.linspace(yRange[0]+ySpacing, yRange[1]-ySpacing, num=N_y) )) ))
 
     x_init = np.hstack((x_init, 
                         np.vstack((np.ones(N_y)*xRange[1],
@@ -468,7 +469,3 @@ else:
 print()
 print('---- Script finished ---- ')
 print() # THE END
-    
-    
-    
-    
