@@ -29,26 +29,25 @@ t = Symbol('t')
 # Define x1, x2 as unknown functions
 x1 = Symbol('x1')
 x2 = Symbol('x2')
-
 #x1, x2 = symbols('x1 x2', cls=Function)
 k = Symbol('k')
 k2 = symbols('k2', cls=Function)
 
-# Position of at tractor
+# Position of attractor
 d1 = Symbol('d1')
 d2 = 0
 
-e1 = Symbol('e1') # Direction of tangent
-e2 = Symbol('e2') # Direction of tangent
+t1 = Symbol('t1') # Direction of tangent
+t2 = Symbol('t2') # Direction of tangent
 
-e1_0 = Symbol('e1_0') # Direction of tangent
-e2_0 = Symbol('e2_0') # Direction of tangent
+t1_0 = Symbol('t1_0') # Direction of tangent
+t2_0 = Symbol('t2_0') # Direction of tangent
 
-l_1 = Symbol('l_1') # Direction of tangent
-l_0 = Symbol('l_0') # Direction of tangent
+l_t = Symbol('l_t') # Direction of tangent
+l_n = Symbol('l_n') # Direction of tangent
 
-#e1_0, e2_0 = symbols('e1_0 e2_0', cls=Function)
-#l_1, l_0 = symbols('l_1, l_0', cls=Function)
+#t1_0, t2_0 = symbols('t1_0 t2_0', cls=Function)
+#l_t, l_n = symbols('l_t, l_n', cls=Function)
 
 # -------------------- Linear System --------------------
 f_x = -1.0*k*Matrix([x1,x2])
@@ -58,144 +57,89 @@ f_x = -1.0*k*Matrix([x1,x2])
 # -------------------- Obstacel Avoidance Matrices --------------------
 # Obstacle in positive plane
 # with d1>0, d2>0
-# e1 in R, e2>0
+# t1 in R, t2>0
 
 # Normal
 #n = Matrix([x1(t)-d1,x2(t)-d2,0])
-refDir = Matrix([x1-d1,x2-d2,0])
-#E = Matrix([[n[0], e1],[n[1], e2]])
-D = Matrix([[l_0, 0], [0, l_1]])
-#D = Matrix([[l_0(x1,x2), 0], [0, l_1(x1,x2)]])
-#E = Matrix([[n[0], e1(x1(t),x2(t))],[n[1], e2]])
-#E = Matrix([[refDir[0], e1(x1,x2)],[refDir[1], e2(x1,x2)]])                   
+n = Matrix([x1-d1,x2-d2,0])
+#E = Matrix([[n[0], t1],[n[1], t2]])
+#D = Matrix([[l_n, 0], [0, l_t]])
+D = Matrix([[l_n(x1,x2), 0], [0, l_t(x1,x2)]])
+#E = Matrix([[n[0], t1(x1(t),x2(t))],[n[1], t2]])
+E = Matrix([[n[0], t1(x1,x2)],[n[1], t2(x1,x2)]])                   
 
-rr = Symbol('w_{rr}')
-re = Symbol('w_{re}')
-er = Symbol('w_{er}')
-ee = Symbol('w_{ee}')
-
-ETheta = Matrix([[rr,er], [re, ee]])
-F = -ETheta @ D @ ETheta.inv()
-
-print("\n\nF = ")
-pprint(simplify(F))
-F_sym = 0.5*(F + F.T)
-print("\n\n")
-
-det_Fsym = simplify(F_sym[0,0]*F_sym[1,1] - F_sym[0,1]*F_sym[1,0])
-#det_Fsym = F_sym[0,0]*F_sym[1,1] - F_sym[0,1]*F_sym[1,0]
-tr_Fsym = simplify(F_sym[0,0] + F_sym[1,1])
-
-print('det_Fsym')
-pprint(det_Fsym)
-
-print('tr_Fsym')
-pprint(tr_Fsym)
-
-# re = 0  because r_E = r_Theta
-ETheta = Matrix([[rr,0], [0, ee]])
-F = -ETheta @ D @ ETheta.inv()
-
-F_sym = 0.5*(F + F.T)
-
-det_Fsym = simplify(F_sym[0,0]*F_sym[1,1] - F_sym[0,1]*F_sym[1,0])
-#det_Fsym = F_sym[0,0]*F_sym[1,1] - F_sym[0,1]*F_sym[1,0]
-tr_Fsym = simplify(F_sym[0,0] + F_sym[1,1])
-
-print('det_Fsym')
-pprint(det_Fsym)
-
-print('tr_Fsym')
-pprint(tr_Fsym)
-
-drr = Symbol('drr')
-dee = Symbol('dee')
-
-dre = Symbol('dre')
-der = Symbol('der')
-
-dTheta = - Matrix([[drr,dre], [der, dee]])
-
-th_sym = 1/2*(dTheta+dTheta.T)
-
-det_th = th_sym[0,0]*th_sym[1,1] - th_sym[0,1]*th_sym[1,0]
-
-
-print('')
-print('')
-print('det_th')
-pprint(det_th)
-
-
-F_tot = F + dTheta
-F_tot = 0.5*(F_tot + F_tot.T)
-
-
-det_F = simplify(F_tot[0,0]*F_tot[1,1] - F_tot[0,1]*F_tot[1,0])
-
-tr_F = simplify(F_tot[0,0]+F_tot[1,1])
-
-print('')
-print('')
-print('det F')
-pprint(det_F)
-
-print('')
-print('')
-print('tr F')
-pprint(tr_F)
-
-#print('E = ')
-#pprint(E.inv() ) # somehow the inverse causes errors the first round the program is run...
-
-#M = E @ D @ E.inv()
+# Modulation Matrix
+M = E @ D @ E.inv()
 
 # -------------------- Evaluation --------------------
-#x_dot = simplify(M @ f_x)
-
+x_dot = simplify(M @ f_x)
 # Extend to 3d for cross product
-#x_dot = x_dot.col_join(Matrix([0]))
+x_dot = x_dot.col_join(Matrix([0]))
 
 # Evaluated at At x2=0
-#x_dot0 = simplify(x_dot.subs(x2(t), 0))
+x_dot0 = simplify(x_dot.subs(x2(t), 0))
 
 # Cross product
-#crossP = - refDir.cross(x_dot)
-#crossP = simplify(crossP[2,0])
- 
+crossP = - n.cross(x_dot)
+crossP = simplify(crossP[2,0])
+
 # Position Vector
-#x  = Matrix([x1(t),x2(t),0])    
+x  = Matrix([x1(t),x2(t),0])    
 # dotP = - x_dot.dot(x)
 
-#M_sym = 0.5*(M + M.T)
-#trapppM = simplify(M_sym[0,0] + M_sym[1,1])
-#detM = simplify(M_sym[0,0]*M_sym[1,1] - M_sym[0,1]*M_sym[1,0])
+M_sym = 0.5*(M + M.T)
+traM = simplify(M_sym[0,0] + M_sym[1,1])
+detM = simplify(M_sym[0,0]*M_sym[1,1] - M_sym[0,1]*M_sym[1,0])
 
-# detM_str = str(detM)
-# detM_str = str.replace(detM_str, "(x1, x2)", "")
-# traM_str = str(traM)
-# traM_str = str.replace(traM_str, "(x1, x2)", "")
+detM_str = str(detM)
+detM_str = str.replace(detM_str, "(x1, x2)", "")
+traM_str = str(traM)
+traM_str = str.replace(traM_str, "(x1, x2)", "")
 
-# print('')
-# print('trace M')
-# print(traM_str)
-# print('')
+print('')
+print('trace M')
+print(traM_str)
+print('')
 
-# print('')
-# print('det M')
-# print(detM_str)
-# print('')
+print('')
+print('det M')
+print(detM_str)
+print('')
 
-# # ---------
-# a_t = Symbol('a_t') 
-# a_n = Symbol('a_n') 
 
-# b_t = Symbol('b_t') 
-# b_n = Symbol('b_n')
+# detM_str =
+# (1.0*(x2*l_n*t1 + (d1 - x1)*l_t*t2) *(x2*l_t*t1 + (d1 - x1)*l_n*t2)
+# -
+# 0.25*(x2*l_n*t2 - x2*l_t*t2 + (d1 - x1)*l_n*t1 - (d1 - x1)*l_t*t1)**2)
+#
+# /
+#
+# (x2*t1 + (d1 - x1)*t2)**2
 
-# eq = 4*(a_n-b_t)*(a_t-b_n) - (a_n-a_t + b_n - b_t)**2
 
-# print('eq', expand(eq))
+detM2 = k**2*(1.0 *
+(x2*l_n*t1 + (d1 - x1)*l_t*t2)
+*(x2*l_t*t1 + (d1 - x1)*l_n*t2)
+-0.25*(
+(x2*l_n*t2 - x2*l_t*t2 + (d1 - x1)*l_n*t1 - (d1 - x1)*l_t*t1)**2
+))/(
+(x2*t1 + (d1 - x1)*t2)**2)
+
+M2 = simplify(detM2)
+print("detM", detM2)
+
+
+# ---------
+a_t = Symbol('a_t') 
+a_n = Symbol('a_n') 
+
+b_t = Symbol('b_t') 
+b_n = Symbol('b_n')
+
+eq = 4*(a_n-b_t)*(a_t-b_n) - (a_n-a_t + b_n - b_t)**2
+
+print('eq', expand(eq))
+
 
 
 # -------------------- Divergence / Trace of Jacobian--------------------
@@ -269,17 +213,17 @@ pprint(tr_F)
 # # 2D ellipse equation
 # t_elli = Matrix([2*p2/a2**2 *x2(t)**(2*p2-1), - 2*p1/a1**2 *x1(t)**(2*p1-1)])
 
-# tra_num = d1*l_0*e2 + d1*l_1*e2 + 2*l_0*e1*x2(t) - 2*l_0*e2*x1(t)
-# tra_num = tra_num.subs(e1, t_elli[0])
-# tra_num = tra_num.subs(e2, t_elli[1])
+# tra_num = d1*l_n*t2 + d1*l_t*t2 + 2*l_n*t1*x2(t) - 2*l_n*t2*x1(t)
+# tra_num = tra_num.subs(t1, t_elli[0])
+# tra_num = tra_num.subs(t2, t_elli[1])
 
-# det_num = d1*l_1*e2 + l_0*e1*x2(t) - l_0*e2*x1(t)
-# det_num = det_num.subs(e1, t_elli[0])
-# det_num = det_num.subs(e2, t_elli[1])
+# det_num = d1*l_t*t2 + l_n*t1*x2(t) - l_n*t2*x1(t)
+# det_num = det_num.subs(t1, t_elli[0])
+# det_num = det_num.subs(t2, t_elli[1])
 
-# denom = d1*e2 + e1*x2(t) - e2*x1(t)
-# denom = denom.subs(e1, t_elli[0])
-# denom = denom.subs(e2, t_elli[1])
+# denom = d1*t2 + t1*x2(t) - t2*x1(t)
+# denom = denom.subs(t1, t_elli[0])
+# denom = denom.subs(t2, t_elli[1])
 
 
 
@@ -296,7 +240,7 @@ pprint(tr_F)
 # print('')
 
 
-# x_center2 = Matrix([d1,e2_0/e1_0*d1, 0])  # 
+# x_center2 = Matrix([d1,t2_0/t1_0*d1, 0])  # 
  
 # crossP_2 = x_dot.cross(x_center2)
 # crossP_2 = simplify(crossP_2[2,0])
@@ -307,7 +251,7 @@ pprint(tr_F)
 # print('')
 
 # gamma_ = x2(t)/(d1-x1(t))
-# delta_ = x1(t)/(-d1/e2*e1)
+# delta_ = x1(t)/(-d1/t2*t1)
 
 # V_0 = 1/2*(gamma_**2 + delta_**2)
 # dV_0 = diff(V_0, t)
@@ -331,7 +275,7 @@ pprint(tr_F)
 # neg = Symbol('neg') # replaces a strictly positive values 
 # neg0 = Symbol('neg0') # replaces a negative values 
 
-# dV_simp = dV_0.subs((l_0-l_1), neg)
+# dV_simp = dV_0.subs((l_n-l_t), neg)
 # dV_simp = dV_simp.subs((-d1+x1(t)), neg)
 # dV_simp = dV_simp.subs(d1^2, neg)
 
@@ -347,9 +291,9 @@ if printToFunction:
 
     intend = "    " # default indent python
     with open(base_pwd + "Analytic/" + "lib_contractionAnalysis.py", "w") as text_file:
-        #print(f"def determinant\(x1, x2, l_0, l_1, e1, e2, d1\):", file=text_file)
+        #print(f"def determinant\(x1, x2, l_n, l_t, t1, t2, d1\):", file=text_file)
         
-        text_file.write("def contraction_det_trace(x1, x2, l_0, l_1, e1, e2, d1): \n")
+        text_file.write("def contraction_det_trace(x1, x2, l_n, l_t, t1, t2, d1): \n")
         text_file.write(intend + "det =" +  det_str + " \n")
         text_file.write(" \n")
         

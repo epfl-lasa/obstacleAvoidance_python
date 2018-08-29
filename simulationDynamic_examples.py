@@ -451,7 +451,7 @@ if simuCase ==7:
     
 
 
-saveFigure = False
+saveFigure = True
 
 if saveFigure:
     anim.ani.save('ani/basic_animation.mp4', dpi=100,fps=50)

@@ -10,6 +10,7 @@ Obstacle Avoidance Algorithm script with vecotr field
 # Command to automatically reload libraries -- in ipython before exectureion
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 
 #from math import sin, cos, atan2,
 #first change the cwd to the script path
@@ -34,7 +35,7 @@ from lib_modulation import *
 from obs_common_section import *
 from obs_dynamic_center_3d import *
 
-def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, obs=[], sysDyn_init=False, xAttractor = np.array(([0,0])), saveFigure = False, figName='default', noTicks=True, figureSize=(7.,6), obs_avoidance_func=obs_avoidance_interpolation_moving, attractingRegion=False, drawVelArrow=False):
+def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, obs=[], sysDyn_init=False, xAttractor = np.array(([0,0])), saveFigure = False, figName='default', noTicks=True, showLabel=True, figureSize=(7.,6), obs_avoidance_func=obs_avoidance_interpolation_moving, attractingRegion=False, drawVelArrow=False, colorCode=False):
     
     #fig_ifd, ax_ifd = plt.subplots(figsize=(10,8))
     fig_ifd, ax_ifd = plt.subplots(figsize=figureSize)
@@ -53,6 +54,7 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
     N_y = resolutionField
     YY, XX = np.mgrid[y_range[0]:y_range[1]:N_y*1j, x_range[0]:x_range[1]:N_x*1j]
 
+    
     if attractingRegion: # Forced to attracting Region
         def obs_avoidance_temp(x, xd, obs):
             #return obs_avoidance_func(x, xd, obs, attractor=xAttractor)
@@ -69,9 +71,10 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
             pos = np.array([XX[ix,iy],YY[ix,iy]])
             
             xd_init[:,ix,iy] = linearAttractor(pos, x0 = xAttractor ) # initial DS
-
+            xd_init[:,ix,iy] = constVelocity(xd_init[:,ix,iy], pos)
+            
             xd_IFD[:,ix,iy] = obs_avoidance(pos, xd_init[:,ix,iy], obs) # modulataed DS with IFDs
-            xd_IFD[:,ix,iy] = constVelocity(xd_IFD[:,ix,iy], pos)
+            #xd_IFD[:,ix,iy] = constVelocity(xd_IFD[:,ix,iy], pos)
 
     if sysDyn_init:
         #fig_init, ax_init = plt.subplots(figsize=(10,8))
@@ -93,8 +96,16 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
     
     dx1_noColl = np.squeeze(xd_IFD[0,:,:]) * collisions
     dx2_noColl = np.squeeze(xd_IFD[1,:,:]) * collisions
-    
-    res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=[0.05,0.05,0.7])
+
+    if colorCode:
+        velMag = np.linalg.norm(np.dstack((dx1_noColl, dx2_noColl)), axis=2 )/6*100
+        strm = res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=velMag, cmap='winter', norm=matplotlib.colors.Normalize(vmin=0, vmax=10.) )
+        #fig_cc = plt.figure()
+        #fig_cc.colorbar(strm.lines)
+        #import pdb; pdb.set_trace() ## DEBUG ##
+        
+    else:
+        res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=[0.05,0.05,0.7])
     #res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=[29./255,29./255,199./255])
     #res_ifd = ax_ifd.vectorfield(XX, YY,dx1_noColl, dx2_noColl, color=[0.5,0.5,0.5])
     #res_ifd = ax_ifd.quiver(XX, YY,dx1_noColl, dx2_noColl, color=[0.5,0.5,0.5])
@@ -108,9 +119,10 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
 
     if noTicks:
         plt.tick_params(axis='both', which='major',bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
-    
-    plt.xlabel(r'$\xi_1$', fontsize=16)
-    plt.ylabel(r'$\xi_2$', fontsize=16)
+
+    if showLabel:
+        plt.xlabel(r'$\xi_1$', fontsize=16)
+        plt.ylabel(r'$\xi_2$', fontsize=16)
 
     plt.tick_params(axis='both', which='major', labelsize=14)
     plt.tick_params(axis='both', which='minor', labelsize=12)
@@ -124,7 +136,7 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
         plt.gca().add_patch(obs_polygon[n])
         
         #x_obs_sf_list = x_obs_sf[:,:,n].T.tolist()
-        plt.plot([x_obs_sf[i][0] for i in range(len(x_obs_sf))],
+p        plt.plot([x_obs_sf[i][0] for i in range(len(x_obs_sf))],
             [x_obs_sf[i][1] for i in range(len(x_obs_sf))], 'k--')
 
         ax_ifd.plot(obs[n].x0[0],obs[n].x0[1],'k.')

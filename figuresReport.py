@@ -38,7 +38,7 @@ from simulationVectorFields import *
 def pltLines(pos0, pos1, xlim=[-100,100], ylim=[-100,100]):
     if pos1[0]-pos0[0]: # m < infty
         m = (pos1[1] - pos0[1])/(pos1[0]-pos0[0])
-        
+        n
         ylim=[0,0]
         ylim[0] = pos0[1] + m*(xlim[0]-pos0[0])
         ylim[1] = pos0[1] + m*(xlim[1]-pos0[0])
@@ -47,7 +47,7 @@ def pltLines(pos0, pos1, xlim=[-100,100], ylim=[-100,100]):
     
     plt.plot(xlim, ylim, '--', color=[0.3,0.3,0.3], linewidth=2)
 
-options = [6]
+options = [5]
 for option in options:
     if option==-1:
 
@@ -105,6 +105,48 @@ for option in options:
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=False, figName='ellipse_centerNotMiddle', noTicks=True)
         pltLines(xAttractor, obs[0].center_dyn)
         plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + 'ellipseCenterNotMiddle_centerLine' + '.eps', bbox_inches='tight')
+        
+    if option==0.1:
+        # Two ellipses placed at x1=0 with dynamic center diplaced and center line in gray
+        obs = []
+        a=[0.5, 1.4]
+        p=[1,1]
+        x0=[2,0]
+        th_r=0/180*pi
+        sf=1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        #obs[n].center_dyn = np.array([2,1.4])
+
+        xlim = [-0.5,4]
+        ylim = [-2,2]
+
+        xAttractor = [0,0]
+
+        N_points = 100
+
+        #obs[0].center_dyn = [10,10]
+
+        Simulation_vectorFields(xlim, ylim, N_points, [], xAttractor=xAttractor, saveFigure=False, figName='ellipse_centerNotMiddle', noTicks=True, obs_avoidance_func=obs_avoidance_ellipsoid, showLabel=False, colorCode=True)
+        plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + 'ellipse_initialLinear_colMap' + '.eps', bbox_inches='tight')
+
+        
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=False, figName='ellipse_centerNotMiddle', noTicks=True, obs_avoidance_func=obs_avoidance_ellipsoid, showLabel=False, colorCode=True)
+        plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + 'ellipse_localMinima_colMap' + '.eps', bbox_inches='tight')
+
+        obs[0].center_dyn = x0
+        
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=False, figName='ellipse_centerMiddle', noTicks=True, showLabel=False, colorCode=True)
+        pltLines(xAttractor, obs[0].center_dyn)
+        plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + 'ellipseCenterMiddle_centerLine_pres_colMap' + '.eps', bbox_inches='tight')
+
+        rat = -0.9
+        obs[0].center_dyn = [x0[0] - rat*np.sin(th_r)*a[1],
+                             x0[1] - rat*np.cos(th_r)*a[1]]
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=False, figName='ellipse_centerNotMiddle', noTicks=True, showLabel=False, colorCode=True)
+        pltLines(xAttractor, obs[0].center_dyn)
+        plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + 'ellipseCenterNotMiddle_centerLine_pres_colMap' + '.eps', bbox_inches='tight')
+
+        
 
     if option==1:
         # Two ellipses combined to represent robot arm -- remove outlier plotting when saving!!
@@ -132,7 +174,6 @@ for option in options:
 
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=False, figName='convexRobot', noTicks=True)
 
-
     if option==2:
         # Decomposition several obstacles - obstacle 1, obstacle 2, both obstacles
         xAttractor = np.array([0,0])
@@ -154,7 +195,6 @@ for option in options:
         obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
         
         xlim = [-3.0,3.]
-
 
         N_points = 100
 
@@ -294,7 +334,7 @@ for option in options:
         xAttractor = np.array([0,0])
         
         obs = []
-        a = [0.4,1.5]
+        a = [1.1,1.1]
         p = [1,1]
         x0 = [1.6, 0.0]
         th_r = +0/180*pi
@@ -313,6 +353,7 @@ for option in options:
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='movingObstacle_notMoving', obs_avoidance_func=obs_avoidance_interpolation_moving, drawVelArrow=True)
 
     if option==6:
+        # TOOD -- radial displacement algorithm
         # Obstacles being overlapping an being perpendicular or parallel to flow 
         N_points = 100
         saveFigures=False

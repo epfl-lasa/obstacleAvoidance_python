@@ -10,7 +10,7 @@ import numpy as np
 
 import sys # Environment variables
 
-base_pwd = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm_python/"
+base_pwd = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/"
 
 lib_string = base_pwd
 if not any (lib_string in s for s in sys.path):

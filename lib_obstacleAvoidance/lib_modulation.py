@@ -24,6 +24,109 @@ from dynamicalSystem_lib import linearAttractor
 
 import warnings
 
+
+def obs_avoidance_ellipsoid(x, xd, obs):
+    # Initialize Variables
+    N_obs = len(obs) #number of obstacles
+    if N_obs ==0:
+        return xd
+    
+    d = x.shape[0]
+    Gamma = np.zeros((N_obs))
+
+    # Linear and angular roation of velocity
+    xd_dx_obs = np.zeros((d,N_obs))
+    xd_w_obs = np.zeros((d,N_obs)) #velocity due to the rotation of the obstacle
+
+    E = np.zeros((d,d,N_obs))
+
+    R = np.zeros((d,d,N_obs))
+    M = np.eye(d)
+
+    for n in range(N_obs):
+        # rotating the query point into the obstacle frame of reference
+        if obs[n].th_r: # Greater than 0
+            R[:,:,n] = compute_R(d,obs[n].th_r)
+        else:
+            R[:,:,n] = np.eye(d)
+
+        # Move to obstacle centered frame
+        x_t = R[:,:,n].T @ (x-obs[n].x0)
+        
+        E[:,:,n], Gamma[n], E_ortho = compute_basis_matrix(d,x_t,obs[n], R[:,:,n])
+        E[:,:,n] = E_ortho               
+        # if Gamma[n]<0.99: 
+        #     print(Gamma[n])
+    w = compute_weights(Gamma,N_obs)
+
+    #adding the influence of the rotational and cartesian velocity of the
+    #obstacle to the velocity of the robot
+    
+    xd_obs = np.zeros((d))
+    
+    for n in range(N_obs):
+    #     x_temp = x-np.array(obs[n].x0)
+    #     xd_w_obs = np.array([-x_temp[1], x_temp[0]])*w[n]
+
+        if d==2:
+            xd_w = np.cross(np.hstack(([0,0], obs[n].w)),
+                            np.hstack((x-np.array(obs[n].x0),0)))
+                            
+            xd_w = xd_w[0:2]
+        else:
+            xd_w = np.cross( obs[n].w, x-obs[n].x0 )
+
+        xd_obs = xd_obs + w[n]*np.exp(-1/obs[n].sigma*(max([Gamma[n],1])-1))*  ( np.array(obs[n].xd) + xd_w )
+        #xd_obs = xd_obs + w[n]* ( np.array(obs[n].xd) + xd_w )
+        
+        #the exponential term is very helpful as it help to avoid the crazy rotation of the robot due to the rotation of the object
+
+    #xd = xd-xd_obs[n] #computing the relative velocity with respect to the obstacle
+    xd = xd-xd_obs #computing the relative velocity with respect to the obstacle
+
+    #ordering the obstacle number so as the closest one will be considered at
+    #last (i.e. higher priority)
+    # obs_order  = np.argsort(-Gamma)
+    
+    for n in range(N_obs):
+        # if 'rho' in obs[n]:
+        if hasattr(obs[n], 'rho'):
+            rho = obs[n].rho
+        else:
+            rho = 1
+
+    #     if isfield(obs[n],'eigenvalue')
+    #         d0 = obs[n].eigenvalue
+    #     else:
+        #print('d0', d0)
+        #print('E', E)
+        d0 = np.ones((E.shape[1]-1))
+
+        if Gamma[n]==0:
+            if not w[n]==0:
+                print('Gamma:', Gamma[n])
+                print('n', n)
+                print('w', w[n])
+            D = w[n]*(np.hstack((-1,d0)))
+        else:
+            D = w[n]*(np.hstack((-1,d0))/abs(Gamma[n])**(1/rho))
+        
+        #     if isfield(obs[n],'tailEffect') && ~obs[n].tailEffect && xdT*R(:,:,n)*E(:,1,n)>=0 #the obstacle is already passed, no need to do anything
+        #         D(1) = 0.0
+
+        if D[0] < -1.0:
+            D[1:] = d0
+            if xd.T @ R[:,:,n] @ E[:,1,n] < 0:
+                D[0] = -1.0
+
+        M = (R[:,:,n] @ E[:,:,n] @ np.diag(D+np.hstack((1,d0)) ) @ LA.pinv(E[:,:,n]) @ R[:,:,n].T) @ M
+
+    xd = M @ xd #velocity modulation
+    #if LA.norm(M*xd)>0.05:
+    #    xd = LA.norm(xd)/LA.norm(M*xd)*M @xd #velocity modulation
+    xd = xd + xd_obs # transforming back the velocity into the global coordinate system
+    return xd
+
 def obs_avoidance_convergence(x, xd, obs):
     # Initialize Variables
     N_obs = len(obs) #number of obstacles
@@ -346,7 +449,11 @@ def obs_avoidance_interpolation_moving(x, xd, obs, attractor='none'):
         xd_obs_n = w[n]*np.exp(-1/obs[n].sigma*(max([Gamma[n],1])-1))*  ( np.array(obs[n].xd) + xd_w )
         # Only consider velocity of the obstacle in direction
         
-        xd_obs_n = E_orth[:,:,n] @ np.array(( max(np.linalg.inv(E_orth[:,:,n])[0,:] @ xd_obs_n,0),np.zeros(d-1) )) 
+        #xd_obs_n = E_orth[:,:,n] @ np.array(( max(np.linalg.inv(E_orth[:,:,n])[0,:] @ xd_obs_n,0),np.zeros(d-1) ))
+        xd_obs_n = np.linalg.inv(E_orth[:,:,n]) @ xd_obs_n
+        xd_obs_n[0] = np.max(xd_obs_n[0], 0)
+        #xd_obs_n[1:] = np.zeros(d-1)
+        xd_obs_n = E_orth[:,:,n] @ xd_obs_n
 
         xd_obs = xd_obs + xd_obs_n
 
@@ -549,11 +656,6 @@ def obs_avoidance_interpolation_bad(x, xd, obs):
     xd = xd + xd_obs # transforming back the velocity into the global coordinate system
     
     return xd
-
-
-
-
-
 
 
 
