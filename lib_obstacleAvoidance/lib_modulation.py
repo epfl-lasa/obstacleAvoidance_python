@@ -699,25 +699,37 @@ def compute_basis_matrix(d,x_t,obs, R):
     else:
         E[:,0] = - x_t
 
-        E[1:d,1:d] = -np.eye(d-1)*nv[0]
 
     # Make diagonal to circle to improve behavior
     nv_hat = -x_t
     
     #generating E, for a 2D model it simply is: E = [dx [-dx(2)dx(1)]]
-    E[0,1] = nv[1]
-    E[1,1] = -nv[0]
+    # E[0,1] = nv[1]
+    # E[1,1] = -nv[0]
 
+
+    #     E[:,+1] = [0-nv(3)nv(2)]
+   if d==3:
+        vec = np.array((nv[2],nv[0],nv[1])) # Random vector which is NOT nv
+        E[:,1] = np.cross(nv, vec)
+        #E[:,1] = E[:,1]/LA.norm(E[:,1])
+           
+        E[:,2] = np.cross(E[:,1], nv)
+        #E[:,2] = E[:,1]/LA.norm(E[:,1])
+    else:
+        print('wrong method -- creates singularities')
+        #generating E, for a 2D model it simply is: E = [dx [-dx(2)dx(1)]]
+        E[0,1:d] = nv[1:d].T
+        E[1:d,1:d] = -np.eye((d-1))*nv[0]
+
+    if d>100: # General case
+        for it_d in range(1,d):
+            E[:d-(it_d+1), it_d] = nv[:d-(it_d+1)]*nv[d-(it_d+1)]
+            E[d-(it_d+1), it_d] = -np.dot(nv[:d-(it_d+1)], nv[:d-(it_d+1)])*nv[d-(it_d+1)]
+            E[:, it_d] = E[:, it_d]/LA.norm(E[:, it_d])
+            
     E_orth = np.copy((E))
     E_orth[:,0] = nv
-
-    if d >2:
-        warngins.warn('Implement for d>2')
-    #     E[:,+1] = [0-nv(3)nv(2)]
-    
-    
-         
-    # TODO -- Higher dimensions
     
     return E, Gamma, E_orth
  
@@ -773,4 +785,16 @@ def orthogonalBasisMatrix(v):
     V = np.eye((dim))
     
     return V
+
+def constVel(xd, const_vel=0.3):
     
+    xd_norm = np.sqrt(np.sum(xd**2))
+
+    if xd_norm==0: return xd
+    
+    return xd/xd_norm*const_vel
+
+
+def constVel_pos(xd, x, x_attr, kFact=0.3, v_max):
+    velFactor = np.min(kFact*np.linalg.norm(x-x_attr), v_max)
+    return xd /np.linalg.norm(xd)*velFactor

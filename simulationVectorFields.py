@@ -16,7 +16,6 @@ import matplotlib
 #first change the cwd to the script path
 #scriptPath = os.path.realpath(os.path.dirname(sys.argv[0]))
 #os.chdir(scriptPath)
-
 import sys
  
 # Custom libraries
@@ -25,6 +24,10 @@ from dynamicalSystem_lib import *
 #if not isinstance("./lib_obstacleAvoidance", sys.path):
 #lib_string = "./lib_obstacleAvoidance/"
 lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
+if not any (lib_string in s for s in sys.path):
+    sys.path.append(lib_string)
+
+lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/"
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 

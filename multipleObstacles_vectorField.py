@@ -6,6 +6,7 @@ Several examples
 
 import sys
 
+
 lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
@@ -33,7 +34,7 @@ def pltLine(pos0, pos1, xlim=[-100,100], ylim=[-100,100]):
 options = [3]
 for option in options:
     if option == 0:
-        xAttractor = np.array([0,0])
+        xAttractor = np.array([0, 0])
         centr = [2, 2.5]
 
         obs = []
