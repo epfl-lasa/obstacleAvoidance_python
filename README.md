@@ -1,1 +1,2 @@
-# obstacleAvoidance_python
+# ObstacleAvoidance Algorithm Implemented in Python
+
