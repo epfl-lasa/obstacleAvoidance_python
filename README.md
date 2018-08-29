@@ -38,3 +38,7 @@ At the heart of the present obstacle avoidance algorithm lies the correct placem
 For good placment to functions have to be applied to the list of obstacles to correctly place the reference point:
 - obs_common_section.py - numerically checks if obstacles have a common section, and if there exists one, the reference point is placed within it.
 - obs_dynamic_center(_3d).py - if no common center exists with an other obstacle, the reference point is displaced from the center of the obstacle with respect to the distances to the other obstacles. This allows a smooth transition between the reference point at the center of the obstacle and sharing the reference point with another obstacle. 
+
+
+## Analytical Analsis
+This folder contains several files for the analytical analysis of contraction/divergence of the system to proof stabilty. 
