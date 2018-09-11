@@ -658,7 +658,6 @@ def obs_avoidance_interpolation_bad(x, xd, obs):
     return xd
 
 
-
 def compute_basis_matrix(d,x_t,obs, R):
     # For an arbitrary shape, the next two lines are used to find the shape segment
     th = np.arctan2(x_t[1],x_t[0])
@@ -704,19 +703,25 @@ def compute_basis_matrix(d,x_t,obs, R):
     nv_hat = -x_t
     
     #generating E, for a 2D model it simply is: E = [dx [-dx(2)dx(1)]]
-    # E[0,1] = nv[1]
-    # E[1,1] = -nv[0]
+    E[0,1] = nv[1]
+    E[1,1] = -nv[0]
 
 
     #     E[:,+1] = [0-nv(3)nv(2)]
-   if d==3:
+    # if d==2:
+    #     E[0,1] = nv[1]
+    #     E[1,1] = -nv[0]
+        
+    #     E[:,0] = nv_hat
+    
+    if d==3:
         vec = np.array((nv[2],nv[0],nv[1])) # Random vector which is NOT nv
         E[:,1] = np.cross(nv, vec)
         #E[:,1] = E[:,1]/LA.norm(E[:,1])
            
         E[:,2] = np.cross(E[:,1], nv)
         #E[:,2] = E[:,1]/LA.norm(E[:,1])
-    else:
+    elif d>3:
         print('wrong method -- creates singularities')
         #generating E, for a 2D model it simply is: E = [dx [-dx(2)dx(1)]]
         E[0,1:d] = nv[1:d].T
@@ -730,6 +735,12 @@ def compute_basis_matrix(d,x_t,obs, R):
             
     E_orth = np.copy((E))
     E_orth[:,0] = nv
+    
+    # Linearize
+    for ii in range(E.shape[1]):
+        E[:,ii] = E[:,ii]/np.linalg.norm(E[:,ii])
+
+    #print(E)
     
     return E, Gamma, E_orth
  
@@ -750,9 +761,23 @@ def compute_basis_matrix(d,x_t,obs, R):
 #     return dx/sqrt(dx_2)*v_max
 
 
-def obs_avoidance_rk4(dt, x, obs, obs_avoidance=obs_avoidance_interpolation, ds=linearAttractor, x0='default'):
-    # TODO -- add prediction of obstacle movement.
+def linearAttractorConst(x, x0 = 'default', velConst=2, distSlow=0.01):
+    # change initial value for n dimensions
+    # TODO -- constant velocity // maximum velocity
     
+    dx = x0-x
+    dx_mag = np.sqrt(np.sum(dx**2))
+
+    if dx_mag: # nonzero value
+        dx = min(1, 1/dx_mag)*velConst*dx
+    
+    return dx
+
+
+
+# def obs_avoidance_rk4(dt, x, obs, obs_avoidance=obs_avoidance_interpolation, ds=linearAttractor, x0='default'):
+def obs_avoidance_rk4(dt, x, obs, obs_avoidance=obs_avoidance_interpolation, ds=linearAttractorConst, x0='default'):
+    # TODO -- add prediction of obstacle movement.
     # k1
     xd = ds(x, x0)
     xd = obs_avoidance(x, xd, obs)
@@ -778,6 +803,9 @@ def obs_avoidance_rk4(dt, x, obs, obs_avoidance=obs_avoidance_interpolation, ds=
 
     return x
 
+
+
+
     
 def orthogonalBasisMatrix(v):
     dim = v.shape[0]
@@ -795,6 +823,6 @@ def constVel(xd, const_vel=0.3):
     return xd/xd_norm*const_vel
 
 
-def constVel_pos(xd, x, x_attr, kFact=0.3, v_max):
-    velFactor = np.min(kFact*np.linalg.norm(x-x_attr), v_max)
-    return xd /np.linalg.norm(xd)*velFactor
+#def constVel_pos(xd, x, x_attr, kFact=0.3, v_max=1):
+#    velFactor = np.min(kFact*np.linalg.norm(x-x_attr), v_max)
+#    return xd /np.linalg.norm(xd)*velFactor

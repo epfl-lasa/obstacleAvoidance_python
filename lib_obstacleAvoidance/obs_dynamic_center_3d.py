@@ -160,11 +160,11 @@ def dynamic_center_3d(obs, intersection_obs, marg_dynCenter=1.3, N_distStep=3, r
             weight_obs_temp[it2,it1] = weight_obs_temp[it1, it2]
             
             # Desired Gamma in (0,1) to be on obstacle
-
-    for it1 in range(N_obs): # Assign dynamic center 
+    
+    for it1 in range(N_obs): # Assign dynamic center
         if it1 in intersection_obs:
             continue # Don't reasign dynamic center if intersection exists
-
+        
         if np.sum(abs(weight_obs_temp[it1,:])): # Some obstacles are close to each other
             # Check if there are points on the surface of the obstacle
             pointOnSurface = (weight_obs_temp == -1) 

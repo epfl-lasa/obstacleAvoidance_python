@@ -2,21 +2,28 @@ import numpy as np
 from math import sin, cos, pi, ceil
 import warnings
 
-class Obstacle:
+# Default functions -- Maybe change to another file
+def ellipse(x_t, a=[1,1], p=[1,1]):
+    Gamma = np.sum((x_t/np.array(a) )**(2*np.aray(p ) ) )
+    
+
+class Obstacle: # Obstacle 
     """ Class of obstacles """
     # self.N_obs = 0
-    def __init__(self, a=[1,1], p=[1,1], x0=[0,0], th_r=0, sf=1, xd=[0,0], sigma=1,  w=0, x_start=0, x_end=0,timeVariant=False):
-        # Obstacle Counter
+    def __init__(self,  th_r=0, sf=1, xd=[0,0], sigma=1,  w=0, x_start=0, x_end=0, timeVariant=False, a=[1,1], p=[1,1], x0=[0,0], rad_func='default'):
+
+        if type(rad_func)==str and rad_func=='default':
+            rad_func = ellipse
+        # Leave at the moment for backwards compatibility
         self.a = a
         self.p = p
+            
+        # Obstacle Counter
         self.x0 = x0
         self.th_r = th_r
         self.sf = sf
-        #self.sf_a = sf_a
+        
         self.sigma = sigma
-
-        #self.xd = xd
-        #self.w = w
 
         self.d = len(x0) #Dimension of space
         
@@ -24,7 +31,7 @@ class Obstacle:
         self.compute_R() # Compute Rotation Matrix
         
         self.resolution = 0 #Resolution of drawing
-        self.x_obs = [] # Numerical drawing of obstacle boundary
+        self.x_obs = [] # Numerical drawing of obstacle boundarywq
         self.x_obs_sf = [] # Obstacle boundary plus margin!
 
         #self.center_dyn = self.x0
@@ -44,8 +51,6 @@ class Obstacle:
             
         self.w = w # Rotational velocity
         self.xd = xd # 
-
-        
            
     
     def update_pos(self, t, dt):

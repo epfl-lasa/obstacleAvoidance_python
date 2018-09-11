@@ -38,17 +38,20 @@ from lib_modulation import *
 from obs_common_section import *
 from obs_dynamic_center_3d import *
 
-def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, obs=[], sysDyn_init=False, xAttractor = np.array(([0,0])), saveFigure = False, figName='default', noTicks=True, showLabel=True, figureSize=(7.,6), obs_avoidance_func=obs_avoidance_interpolation_moving, attractingRegion=False, drawVelArrow=False, colorCode=False):
+def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, obs=[], sysDyn_init=False, xAttractor = np.array(([0,0])), saveFigure = False, figName='default', noTicks=True, showLabel=True, figureSize=(7.,6), obs_avoidance_func=obs_avoidance_convergence, attractingRegion=False, drawVelArrow=False, colorCode=False, streamColor=[0.05,0.05,0.7], obstacleColor=[], plotObstacle=True, plotStream=True, figHandle=[], alphaVal=1):
     
     #fig_ifd, ax_ifd = plt.subplots(figsize=(10,8))
-    fig_ifd, ax_ifd = plt.subplots(figsize=figureSize)
+    if len(figHandle):
+        fig_ifd, ax_ifd = figHandle[0], figHandle[1]
+    else:
+        fig_ifd, ax_ifd = plt.subplots(figsize=figureSize)    
     
     # Numerical hull of ellipsoid
     for n in range(len(obs)):
         obs[n].draw_ellipsoid(numPoints=50) # 50 points resolution
 
     # Adjust dynamic center
-    intersection_obs = obs_common_section(obs)
+    #intersection_obs = obs_common_section(obs)
     #print('intersection_obs', intersection_obs)
     #dynamic_center_3d(obs, intersection_obs)
 
@@ -100,20 +103,22 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
     dx1_noColl = np.squeeze(xd_IFD[0,:,:]) * collisions
     dx2_noColl = np.squeeze(xd_IFD[1,:,:]) * collisions
 
-    if colorCode:
-        velMag = np.linalg.norm(np.dstack((dx1_noColl, dx2_noColl)), axis=2 )/6*100
-        strm = res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=velMag, cmap='winter', norm=matplotlib.colors.Normalize(vmin=0, vmax=10.) )
-        #fig_cc = plt.figure()
-        #fig_cc.colorbar(strm.lines)
-        #import pdb; pdb.set_trace() ## DEBUG ##
-        
-    else:
-        res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=[0.05,0.05,0.7])
-    #res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=[29./255,29./255,199./255])
-    #res_ifd = ax_ifd.vectorfield(XX, YY,dx1_noColl, dx2_noColl, color=[0.5,0.5,0.5])
-    #res_ifd = ax_ifd.quiver(XX, YY,dx1_noColl, dx2_noColl, color=[0.5,0.5,0.5])
-    
-    ax_ifd.plot(xAttractor[0],xAttractor[1], 'k*',linewidth=18.0, markersize=18)
+    if plotStream:
+        if colorCode:
+            velMag = np.linalg.norm(np.dstack((dx1_noColl, dx2_noColl)), axis=2 )/6*100
+            strm = res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=velMag, cmap='winter', norm=matplotlib.colors.Normalize(vmin=0, vmax=10.) )
+            #fig_cc = plt.figure()
+            #fig_cc.colorbar(strm.lines)
+            #import pdb; pdb.set_trace() ## DEBUG ##
+
+        else:
+            res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=streamColor)
+            #res_ifd.set_alpha(alphaVal)
+        #res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=[29./255,29./255,199./255])
+        #res_ifd = ax_ifd.vectorfield(XX, YY,dx1_noColl, dx2_noColl, color=[0.5,0.5,0.5])
+        #res_ifd = ax_ifd.quiver(XX, YY,dx1_noColl, dx2_noColl, color=[0.5,0.5,0.5])
+
+        ax_ifd.plot(xAttractor[0],xAttractor[1], 'k*',linewidth=18.0, markersize=18)
     
     plt.gca().set_aspect('equal', adjustable='box')
 
@@ -131,25 +136,30 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
     plt.tick_params(axis='both', which='minor', labelsize=12)
 
     # Draw obstacles
-    obs_polygon = []
-    for n in range(len(obs)):
-        x_obs_sf = obs[n].x_obs_sf # todo include in obs_draw_ellipsoid
-        obs_polygon.append( plt.Polygon(obs[n].x_obs))
-        obs_polygon[n].set_color(np.array([176,124,124])/255)
-        plt.gca().add_patch(obs_polygon[n])
-        
-        #x_obs_sf_list = x_obs_sf[:,:,n].T.tolist()
-p        plt.plot([x_obs_sf[i][0] for i in range(len(x_obs_sf))],
-            [x_obs_sf[i][1] for i in range(len(x_obs_sf))], 'k--')
+    if plotObstacle:
+        obs_polygon = []
+        for n in range(len(obs)):
+            x_obs_sf = obs[n].x_obs_sf # todo include in obs_draw_ellipsoid
+            obs_polygon.append( plt.Polygon(obs[n].x_obs))
+            #print(obstacleColor)
+            if len(obstacleColor)==len(obs):
+                obs_polygon[n].set_color(obstacleColor[n])
+            else:
+                obs_polygon[n].set_color(np.array([176,124,124])/255)
+            plt.gca().add_patch(obs_polygon[n])
 
-        ax_ifd.plot(obs[n].x0[0],obs[n].x0[1],'k.')
-        if hasattr(obs[n], 'center_dyn'):# automatic adaptation of center 
-            ax_ifd.plot(obs[n].center_dyn[0],obs[n].center_dyn[1], 'k+', linewidth=18, markeredgewidth=4, markersize=13)
+            #x_obs_sf_list = x_obs_sf[:,:,n].T.tolist()
+            plt.plot([x_obs_sf[i][0] for i in range(len(x_obs_sf))],
+                [x_obs_sf[i][1] for i in range(len(x_obs_sf))], 'k--')
 
-        if drawVelArrow and np.linalg.norm(obs[n].xd)>0:
-            col=[0.5,0,0.9]
-            fac=5 # scaling factor of velocity
-            ax_ifd.arrow(obs[n].x0[0], obs[n].x0[1], obs[n].xd[0]/fac, obs[n].xd[1]/fac, head_width=0.3, head_length=0.3, linewidth=10, fc=col, ec=col, alpha=1)
+            ax_ifd.plot(obs[n].x0[0],obs[n].x0[1],'k.')
+            if hasattr(obs[n], 'center_dyn'):# automatic adaptation of center 
+                ax_ifd.plot(obs[n].center_dyn[0],obs[n].center_dyn[1], 'k+', linewidth=18, markeredgewidth=4, markersize=13)
+
+            if drawVelArrow and np.linalg.norm(obs[n].xd)>0:
+                col=[0.5,0,0.9]
+                fac=5 # scaling factor of velocity
+                ax_ifd.arrow(obs[n].x0[0], obs[n].x0[1], obs[n].xd[0]/fac, obs[n].xd[1]/fac, head_width=0.3, head_length=0.3, linewidth=10, fc=col, ec=col, alpha=1)
 
     plt.ion()
     plt.show()
@@ -158,6 +168,9 @@ p        plt.plot([x_obs_sf[i][0] for i in range(len(x_obs_sf))],
         plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + figName + '.eps', bbox_inches='tight')
         #plt.grid(True)
         print('implement figure saving')
+
+    
         
         # Remove transparency
         #axins.patch.set_alpha(1)
+    return fig_ifd, ax_ifd

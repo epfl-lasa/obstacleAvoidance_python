@@ -32,6 +32,7 @@ def obs_common_section(obs):
     
     for it_obs in range(N_obs):
         rotMat[:,:,it_obs] = np.array(( obs[it_obs].rotMatrix ))
+        obs[it_obs].draw_ellipsoid()
 
     for it_obs1 in range(N_obs):
         intersection_with_obs1 = False
@@ -74,7 +75,6 @@ def obs_common_section(obs):
                     Gamma = np.sum( 1/obs[it_obs2].sf *Gamma_temp, axis=0 )
 
                     ind = Gamma<1
-                    #import pdb; pdb.set_trace() ## DEBUG ##
                     
                     if sum(ind):
                         intersection_sf[it_intersect] = intersection_sf[it_intersect][:,ind]
@@ -90,7 +90,7 @@ def obs_common_section(obs):
                     N_points = len(obs[it_obs1].x_obs_sf)
                     
                     Gamma_temp = (rotMat[:,:,it_obs1].T @  (np.array(obs[it_obs2].x_obs_sf).T-np.tile(obs[it_obs1].x0,(N_points,1)).T ) / np.tile(obs[it_obs1].a, (N_points,1)).T )
-                    Gamma = np.sum( (1/obs[it_obs1].sf *  Gamma_temp) ** (2*np.tile(obs[it_obs1].p, (N_points,1)).T), axis=0) 
+                    Gamma = np.sum( (1/obs[it_obs1].sf *  Gamma_temp) ** (2*np.tile(obs[it_obs1].p, (N_points,1)).T), axis=0)
                     intersection_sf_temp = np.array(obs[it_obs2].x_obs_sf)[Gamma<1,:].T
 
                     # Get all poinst of obs1 in obs2

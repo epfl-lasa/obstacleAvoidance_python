@@ -2,7 +2,6 @@
 Dynamic Simulation - Obstacle Avoidance Algorithm
 @author LukasHuber
 @date 2018-05-24
-
 '''
 
 # Command to automatically reload libraries -- in ipython before exectureion
@@ -80,7 +79,6 @@ class Animated():
         self.dim = x0.shape[0]
 
         #self.simuColors=[]
-
         
         # Initialize class variables
         self.obs = obs
@@ -139,7 +137,7 @@ class Animated():
         if self.dim==3:
             self.ax.set_zlim(zRange)
             self.ax.set_zlabel('x3')
-            #self.ax.view_init(elev=0.3, azim=0.4)
+            #self.ax.view_init(elev=0.3, aim=0.4)
 
         # Set axis etc.
         plt.gca().set_aspect('equal', adjustable='box')
@@ -149,9 +147,8 @@ class Animated():
         #self.tt1 = self.ax.text(.5, 1.05, '', transform = self.ax.transAxes, va='center', animated=True, )
         
         # Adjust dynamic center
-        #intersection_obs = obs_common_section(self.obs)
-        #dynamic_center(self.obs, intersection_obs)
-        #dynamic_center_3d(self.obs, intersection_obs)
+        intersection_obs = obs_common_section(self.obs)
+        dynamic_center_3d(self.obs, intersection_obs)
         
         # Then setup FuncAnimation        
         self.ani = FuncAnimation(self.fig, self.update, interval=1, frames = self.N_simuMax-2, repeat=False, init_func=self.setup_plot, blit=True, save_count=self.N_simuMax-2)
@@ -219,22 +216,25 @@ class Animated():
 
         self.fig.canvas.mpl_connect('button_press_event', onClick)  # Button click enabled
 
-        self.tt1 = self.ax.text(.5, 8.2, '', va='center', fontsize=20)
+        #self.tt1 = self.ax.text(.5, 8.2, '', va='center', fontsize=20)
 
         print('setup finished')
 
-        return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints + [self.tt1])
+        #return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints + [self.tt1])
+        return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints)
     
     def update(self, iSim):
         #if saveFigure:
-        print('iteration num {} -- frame = {}'.format(self.iSim, iSim))
         if pause:        # NO ANIMATION -- PAUSE
             self.old_time=time.time()
             return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints)
+        
+        print('iteration num {} -- frame = {}'.format(self.iSim, iSim))
 
-        #intersection_obs = obs_common_section(self.obs)
-        #dynamic_center_3d(self.obs, intersection_obs)
-
+        intersection_obs = obs_common_section(self.obs)
+        print('center before',obs[0].center_dyn)
+        dynamic_center_3d(self.obs, intersection_obs)
+        print('center after',obs[0].center_dyn)
         RK4_int = True
         if RK4_int: # Runge kutta integration
             for j in range(self.N_points):
@@ -242,7 +242,8 @@ class Animated():
         else: # Simple euler integration
             # Calculate DS
             for j in range(self.N_points):
-                xd_temp = linearAttractor_const(self.x_pos[:,self.iSim, j], self.attractorPos, velConst=1.6, distSlow=0.01)
+                #xd_temp = linearAttractor_const(self.x_pos[:,self.iSim, j], self.attractorPos, velConst=0.01, distSlow=0.01)
+                xd_temp = constVelocity(self.x_pos[:,self.iSim, j], self.attractorPos, velConst=0.001, distSlow=0.01)
                 #self.xd_ds[:,self.iSim,j] = obs_avoidance_convergence(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
                 self.xd_ds[:,self.iSim,j] = obs_avoidance_interpolation_moving(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
                 #self.xd_ds[:,self.iSim,j] = obs_avoidance_interpolation(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
@@ -261,7 +262,7 @@ class Animated():
             self.endPoints[j].set_xdata(self.x_pos[0,self.iSim+1,j])
             self.endPoints[j].set_ydata(self.x_pos[1,self.iSim+1,j])
             if self.dim==3:
-                self.endPoints[j].set_3d_properties(zs=self.x_pos[2,self.iSim+1,j])
+                self.endPoints[j].set_3d_properties(zs=self.x_pos[2,self.biSim+1,j])
         
         # ========= Check collision ----------
         #collisions = obs_check_collision(self.x_pos[:,self.iSim+1,:], obs)
@@ -304,9 +305,10 @@ class Animated():
         self.old_time = self.sleep_const(self.old_time)
         self.pause_time = self.old_time
 
-        self.tt1.set_text('{:2.2f} s'.format(round(self.t[self.iSim+1],2) ) )
+        #self.tt1.set_text('{:2.2f} s'.format(round(self.t[self.iSim+1],2) ) )
 
-        return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints + [self.tt1] )
+        #return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints + [self.tt1] )
+        return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints)
 
     def check_convergence(self):
         #return
@@ -340,8 +342,9 @@ class Animated():
         return next_time
 
 
-N = 3
-
+saveFigure=0
+    
+N = 4
 
 def samplePointsAtBorder(N, xRange, yRange):
     # Draw points evenly spaced at border
@@ -370,7 +373,7 @@ def samplePointsAtBorder(N, xRange, yRange):
     return x_init
 
     
-simuCase=10
+simuCase=4
 if simuCase==0:
     N = 10
     x_init = np.vstack((np.ones(N)*20,
@@ -565,6 +568,8 @@ elif simuCase ==3:
     anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.02, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
 
 elif simuCase==4:
+
+    # Moving in LAB
     xRange = [0,16]
     yRange = [0,9]
     
@@ -583,6 +588,7 @@ elif simuCase==4:
     xd0=[0,0]
     w0 = 0
 
+    x01 =x0
     x_start = 0
     x_end = 10
     obs.append(Obstacle(a=a, p=p, x0=x01,th_r=th_r, sf=sf, x_start=x_start, x_end=x_end, timeVariant=True))
@@ -646,11 +652,19 @@ elif simuCase==4:
     obs[1].func_w = func_w2
     obs[1].func_xd = func_xd2
 
-    x_init = np.array([[15.5],[0.2]])
+    #x_init = np.array([[15.5],[0.2]])
+    x_init = samplePointsAtBorder(N, xRange, yRange)
+    collisions = obs_check_collision(x_init, obs)
+    x_init = x_init[:,collisions[0]]
+    
     attractorPos = [4,8]
 
     anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.01, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01,attractorPos=attractorPos )
-    print('Animation Finished')
+    
+    if False: #save animation
+        anim.ani.save('ani/animation_multipleObstacles_conv.mp4', dpi=100, fps=25)
+        print('Saving finished.')
+    
 
 elif simuCase==5:
     
@@ -707,6 +721,9 @@ elif simuCase==5:
         th_r=-30/180*pi,
         sf=1.0 
         ))
+
+    N =10
+    
     anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.02, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
 
     #dist slow = 0.18
@@ -911,7 +928,7 @@ if simuCase ==11:
     if False: #save animation
         anim.ani.save('ani/animation_multipleObstacles_conv.mp4', dpi=100, fps=25)
         print('Saving finished.')
-    
+
 if saveFigure:
     anim.ani.save('ani/test.mp4', dpi=100,fps=50)
     print('Saving finished.')

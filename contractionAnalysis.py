@@ -20,7 +20,6 @@ lib_string = base_pwd + "lib_obstacleAvoidance/"
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 
-
 lib_string = base_pwd + "Analytic/"
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
@@ -29,7 +28,7 @@ from class_obstacle import *
 from lib_obstacleAvoidance import obs_check_collision
 from lib_contractionAnalysis import *
 from dynamicalSystem_lib import *
-from obstacleAvoidance_lib import *
+from lib_obstacleAvoidance import *
 
 simuNumb = 1
 saveFig = False
