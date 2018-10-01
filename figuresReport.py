@@ -75,6 +75,28 @@ for option in options:
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='linearSystem_avoidanceCircle', noTicks=True)
 
 
+    if option==-1:
+        # Two ellipses placed at x1=0 with dynamic center diplaced and center line in gray
+        obs = []
+        a=[0.4, 1]
+        p=[1, 1]
+        x0=[1.5, 0]
+        th_r=0/180*pi
+        sf=1
+        
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+        xlim = [-0.5,4]
+        ylim = [-2,2]
+
+        xAttractor = [0,0]
+
+        N_points = 100
+
+        obs[0].center_dyn = x0
+        
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=False, figName='ellipse_centerMiddle', noTicks=True, )
+        
     if option==0:
         # Two ellipses placed at x1=0 with dynamic center diplaced and center line in gray
         obs = []

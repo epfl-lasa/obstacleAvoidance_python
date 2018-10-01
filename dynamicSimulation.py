@@ -70,7 +70,7 @@ def onClick(event):
             print('Animation exited.')
             anim.ani.event_source.stop()
 
-            
+               
 ##### Anmation Function #####
 class Animated():
     """An animated scatter plot using matplotlib.animations.FuncAnimation."""
@@ -195,7 +195,8 @@ class Animated():
             self.centers.append(center)
             
             if hasattr(self.obs[n], 'center_dyn'):# automatic adaptation of center
-                cent_dyn, = self.ax.plot([],[], 'k+', animated=True)
+                cent_dyn, = self.ax.plot([],[], 'k+', animated=True, linewidth=18, markeredgewidth=4, markersize=13)
+                # ax_ifd.plot(obs[n].center_dyn[0],obs[n].center_dyn[1], 'k+', linewidth=18, markeredgewidth=4, markersize=13)
                 self.cent_dyns.append(cent_dyn)
         
         for ii in range(self.N_points):
@@ -210,7 +211,7 @@ class Animated():
 
 
         if self.dim==2:
-            plt.plot(self.attractorPos[0], self.attractorPos[1], 'k*', linewidth=7.0)
+            plt.plot(self.attractorPos[0], self.attractorPos[1], 'k*', linewidth=7.0, markeredgewidth=4, markersize=13)
         else:
             plt.plot([self.attractorPos[0]], [self.attractorPos[1]], [self.attractorPos[2]], 'k*', linewidth=7.0)
 
@@ -239,12 +240,14 @@ class Animated():
         if RK4_int: # Runge kutta integration
             for j in range(self.N_points):
                 self.x_pos[:, self.iSim+1,j] = obs_avoidance_rk4(self.dt, self.x_pos[:,self.iSim,j], self.obs, x0=self.attractorPos, obs_avoidance = obs_avoidance_interpolation)
+                
         else: # Simple euler integration
             # Calculate DS
             for j in range(self.N_points):
                 #xd_temp = linearAttractor_const(self.x_pos[:,self.iSim, j], self.attractorPos, velConst=0.01, distSlow=0.01)
                 xd_temp = constVelocity(self.x_pos[:,self.iSim, j], self.attractorPos, velConst=0.001, distSlow=0.01)
                 #self.xd_ds[:,self.iSim,j] = obs_avoidance_convergence(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
+                xd_temp = xd_temp
                 self.xd_ds[:,self.iSim,j] = obs_avoidance_interpolation_moving(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
                 #self.xd_ds[:,self.iSim,j] = obs_avoidance_interpolation(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
                 #self.xd_ds[:,self.iSim,j] = obs_avoidance_interpolation_bad(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
@@ -573,7 +576,6 @@ elif simuCase==4:
     xRange = [0,16]
     yRange = [0,9]
     
-    N = 4
     #x_init = np.vstack((np.ones(N)*16,
     #                    np.linspace(0,9,num=N) ))b
     
@@ -653,6 +655,8 @@ elif simuCase==4:
     obs[1].func_xd = func_xd2
 
     #x_init = np.array([[15.5],[0.2]])
+    N = 20
+
     x_init = samplePointsAtBorder(N, xRange, yRange)
     collisions = obs_check_collision(x_init, obs)
     x_init = x_init[:,collisions[0]]
@@ -667,32 +671,36 @@ elif simuCase==4:
     
 
 elif simuCase==5:
+
     
     xRange = [-4,4]
     yRange = [-0.1,6.0]
 
-    N = 20
+    N = 10
+    
+    x_init = samplePointsAtBorder(N, xRange, yRange)
+    print('axample at rorder')
 
-    dx = xRange[1]-xRange[0]
-    dy = yRange[1]-yRange[0]
+    # dx = xRange[1]-xRange[0]
+    # dy = yRange[1]-yRange[0]
 
-    N_x = ceil(dx/(2*(dx+dy))*N)
-    N_y = ceil(dx/(2*(dx+dy))*N)
+    # N_x = ceil(dx/(2*(dx+dy))*N)
+    # N_y = ceil(dx/(2*(dx+dy))*N)
 
-    x_init = np.vstack((np.linspace(xRange[0],xRange[1], num=N_x),
-                        np.ones(N_x)*yRange[0]) )
+    # x_init = np.vstack((np.linspace(xRange[0],xRange[1], num=N_x),
+    #                     np.ones(N_x)*yRange[0]) )
 
-    x_init = np.hstack((x_init, 
-                        np.vstack((np.linspace(xRange[0],xRange[1], num=N_x),
-                                   np.ones(N_x)*yRange[1] )) ))
+    # x_init = np.hstack((x_init, 
+    #                     np.vstack((np.linspace(xRange[0],xRange[1], num=N_x),
+    #                                np.ones(N_x)*yRange[1] )) ))
 
-    x_init = np.hstack((x_init, 
-                        np.vstack((np.ones(N_y)*xRange[0],
-                                   np.linspace(yRange[0],yRange[1], num=N_y) )) ))
+    # x_init = np.hstack((x_init, 
+    #                     np.vstack((np.ones(N_y)*xRange[0],
+    #                                np.linspace(yRange[0],yRange[1], num=N_y) )) ))
 
-    x_init = np.hstack((x_init, 
-                        np.vstack((np.ones(N_y)*xRange[1],
-                                   np.linspace(yRange[0],yRange[1], num=N_y) )) ))
+    # x_init = np.hstack((x_init, 
+    #                     np.vstack((np.ones(N_y)*xRange[1],
+    #                                np.linspace(yRange[0],yRange[1], num=N_y) )) ))
     #x_init = np.array( [[-2,-2,-1],
     #                    [2, 3, 3]])
     xAttractor = np.array([0,0])
@@ -722,12 +730,16 @@ elif simuCase==5:
         sf=1.0 
         ))
 
-    N =10
+    N = 10
     
     anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.02, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
 
+    if True: #save animation
+        anim.ani.save('ani/animation_peopleWalking.mp4', dpi=100, fps=25)
+        print('Saving finished.')
+
     #dist slow = 0.18
-    #anim.ani.save('ani/simue.mpeg', writer="ffmpeg")
+    # anim.ani.save('ani/simue.mpeg', writer="ffmpeg")
     #FFwriter = animation.FFMpegWriter()
     #anim.ani.save('ani/basic_animation.mp4', writer = FFwriter, fps=20)
 

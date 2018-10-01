@@ -101,7 +101,7 @@ def obs_avoidance_ellipsoid(x, xd, obs):
         #print('d0', d0)
         #print('E', E)
         d0 = np.ones((E.shape[1]-1))
-
+s
         if Gamma[n]==0:
             if not w[n]==0:
                 print('Gamma:', Gamma[n])
@@ -385,6 +385,204 @@ def obs_avoidance_interpolation(x, xd, obs):
 
     return xd
 
+
+
+def obs_avoidance_nonlinear(x, xd, obs, ds,):
+    # TODO -- speed up for multiple obstacles, not everything needs to be safed...
+
+    if d==2: # TODO for higher dimensions
+        f_nonLinear = xd
+        # xd_nonLinear = xd
+        # TODO: f_lin = ds(x_ref)
+        f_linear = np.array([-1,0]) # velocity at center
+        xd = f_linear
+    
+    # Initialize Variables
+    N_obs = len(obs) #number of obstacles
+    if N_obs ==0:
+        return xd
+    
+    d = x.shape[0]
+    Gamma = np.zeros((N_obs))
+
+    # Linear and angular roation of velocity
+    xd_dx_obs = np.zeros((d,N_obs))
+    xd_w_obs = np.zeros((d,N_obs)) #velocity due to the rotation of the obstacle
+
+    #M = np.zero((d, d, N_obs))
+    E = np.zeros((d,d,N_obs))
+    R = np.zeros((d,d,N_obs))
+
+    for n in range(N_obs):
+        # rotating the query point into the obstacle frame of reference
+        if obs[n].th_r: # Greater than 0
+            R[:,:,n] = compute_R(d,obs[n].th_r)
+        else:
+            R[:,:,n] = np.eye(d)
+
+        # Move to obstacle centered frame
+        x_t = R[:,:,n].T @ (x-obs[n].x0)
+v        
+        E[:,:,n], Gamma[n], E_ortho = compute_basis_matrix( d,x_t,obs[n], R[:,:,n])
+                        
+        # if Gamma[n]<0.99: 
+        #     print(Gamma[n])
+    w = compute_weights(Gamma,N_obs)
+
+    #adding the influence of the rotational and cartesian velocity of the
+    #obstacle to the velocity of the robot
+    xd_obs = np.zeros((d))
+    
+    for n in range(N_obs):
+        if d==2:
+            xd_w = np.cross(np.hstack(([0,0], obs[n].w)),
+                            np.hstack((x-np.array(obs[n].x0),0)))
+            xd_w = xd_w[0:2]
+        elif d==3:
+            xd_w = np.cross( obs[n].w, x-obs[n].x0 )
+        else:
+            warnings.warn('NOT implemented for d={}'.format(d))
+
+        #the exponential term is very helpful as it help to avoid the crazy rotation of the robot due to the rotation of the object
+        xd_obs = xd_obs + w[n]*np.exp(-1/obs[n].sigma*(max([Gamma[n],1])-1))*  ( np.array(obs[n].xd) + xd_w )
+
+    xd = xd-xd_obs #computing the relative velocity with respect to the obstacle
+
+    # Create orthogonal matrix
+    #Ff = orthogonalBasisMatrix(xd)
+    xd_norm = LA.norm(xd)
+    if xd_norm:#nonzero
+        xd_n = xd/xd_norm
+    else:
+        xd_n=xd
+        
+    xd_t = np.array([xd_n[1], -xd_n[0]])
+ 
+    Ff = np.array([xd_n, xd_t])
+
+    #R = LA.inv(F)
+    Rf = Ff.T # ?! True???
+
+    M = np.zeros((d,d,N_obs))
+    xd_hat = np.zeros((d, N_obs))
+    xd_mags = np.zeros((N_obs))
+    k_ds = np.zeros((d-1, N_obs))
+    
+    for n in range(N_obs):
+        if hasattr(obs[n], 'rho'):
+            rho = obs[n].rho
+        else:
+            rho = 1
+
+        d0 = np.ones((E.shape[1]-1))
+
+        if Gamma[n]==0:
+            if not w[n] == 0:
+                print('Gamma:', Gamma[n])
+            D = w[n]*(np.hstack((-1,d0)))
+        else:
+            D = w[n]*(np.hstack((-1,d0))/abs(Gamma[n])**(1/rho))
+        #     if isfield(obs[n],'tailEffect') && ~obs[n].tailEffect && xdT*R(:,:,n)*E(:,1,n)>=0 #the obstacle is already passed, no need to do anything
+        #         D(1) = 0.0
+        if D[0] < -1.0:
+            D[1:] = d0
+            if xd.T @ R[:,:,n] @ E[:,1,n] < 0:
+                D[0] = -1.0
+        
+        M[:,:,n] = (R[:,:,n] @ E[:,:,n] @ np.diag(D+np.hstack((1,d0)) ) @ LA.pinv(E[:,:,n]) @ R[:,:,n].T)
+        xd_hat[:,n] = M[:,:,n] @ xd #velocity modulation
+        xd_mags[n] = np.sqrt(np.sum(xd_hat[:,n]**2))
+        if xd_mags[n]: # Nonzero magnitude
+            xd_hat_n = xd_hat[:,n]/xd_mags[n]
+        else:
+            xd_hat_n = xd_hat[:,n]
+        
+        if not d==2:
+            warnings.warn('not implemented for d neq 2')
+
+        Rfn = Rf @ xd_hat_n
+        k_fn = Rfn[1:]
+        kfn_norm = LA.norm(k_fn) # Normalize
+        if kfn_norm:#nonzero
+            k_fn = k_fn/ kfn_norm
+
+            
+        sumHat = np.sum(xd_hat_n*xd_n)
+        if sumHat > 1 or sumHat < -1:
+            sumHat = max(min(sumHat, 1), -1)
+            warnings.warn(' cosinus out of bound!')
+            
+        k_ds[:,n] = np.arccos(sumHat)*k_fn.squeeze()
+        
+    xd_mags = np.sqrt(np.sum(xd_hat**2, axis=0) )
+
+    # Weighted interpolation
+    weightPow = 2 # Hyperparameter for several obstacles !!!!
+    w = w**weightPow
+    if not np.linalg.norm(w,2):
+        warnings.warn('trivial weight.')
+    w = w/np.linalg.norm(w,2)
+    
+    xd_mag = np.sum(xd_mags*w)
+    k_d = np.sum(k_ds*np.tile(w, (d-1, 1)), axis=1)
+
+    norm_kd = LA.norm(k_d)
+    
+    # Reverse k_d
+    if norm_kd: #nonzero
+        n_xd = Rf.T @ np.hstack((np.cos(norm_kd), np.sin(norm_kd)/norm_kd*k_d ))
+    else:
+        n_xd = Rf.T @  np.hstack((1, np.zeros((d-1)) ))
+        
+    xd = xd_mag*n_xd.squeeze()
+    
+    #if LA.norm(M*xd)>0.05:
+    #    xd = LA.norm(xd)/LA.norm(M*xd)*M @xd #velocity modulation
+
+    xd = xd + xd_obs # transforming back the velocity into the global coordinate system
+
+    #if  (str(float(xd[0] )).lower() == 'nan' or
+    #     str(float(xd[1] )).lower() == 'nan'):
+        
+    assert(not( str(float(xd[0] )).lower() == 'nan'))
+    assert(not( str(float(xd[1] )).lower() == 'nan'))
+
+    if d==2: # TODO for higher dimensions
+        # Get the angle between the different systems and the tangent plane
+        # TODO - adjust for moving obstacles
+        
+        e = E[:,1]
+        e_magnitude = LA.norm(e)
+        if e_magnitude: # nonzero value
+            e = e/e_magnitude
+        # Get the different angles
+        
+        angle_linear = np.copysign(np.cos(e_magnitude.T @ xd),
+                                   np.sin(e_magnitude.T @ xd) )
+        magXd = LA.norm(xd)
+        if magXd:
+            angle_linear = angle_linear/magXd
+        
+        angle_initial_linear = np.copysign(np.cos(e_magnitude.T @ f_linear),
+                                            np.sin(e_magnitude.T @ f_linear) )
+        mag_initLin = LA.norm(f_linear)
+        if mag_initLin:
+            angle_initial_linear = angle_initial_linear/mag_initLin
+            
+        angle_initial_nonlinear = np.copysign(np.cos(e_magnitude.T @ f_nonlinear/),
+                                            np.sin(e_magnitude.T @ f_nonlinear) )
+        mag_initNonlin = LA.norm(f_nonlinear)
+        if mag_initNonlin:
+            angle_initial_nonlinear = angle_initial_nonlinear/mag_initNonlin
+
+        if angle_initial_linear:
+            angle_nonlinear = angle_linear/angle_initial_linear*angle_initial_nonlinear
+        else:
+                
+
+    return xd
+
+
 def obs_avoidance_interpolation_moving(x, xd, obs, attractor='none'):
     # TODO -- speed up for multiple obstacles, not everything needs to be safed...
 
@@ -568,95 +766,6 @@ def obs_avoidance_interpolation_moving(x, xd, obs, attractor='none'):
     return xd
 
 
-def obs_avoidance_interpolation_bad(x, xd, obs):
-    # TODO -- speed up for multiple obstacles, not everything needs to be safed...
-    
-    # Initialize Variables
-    N_obs = len(obs) #number of obstacles
-    if N_obs ==0:
-        return xd
-    
-    d = x.shape[0]
-    Gamma = np.zeros((N_obs))
-
-    # Linear and angular roation of velocity
-    xd_dx_obs = np.zeros((d,N_obs))
-    xd_w_obs = np.zeros((d,N_obs)) #velocity due to the rotation of the obstacle
-
-    #M = np.zero((d, d, N_obs))
-    E = np.zeros((d,d,N_obs))
-    R = np.zeros((d,d,N_obs))
-
-    for n in range(N_obs):
-        # rotating the query point into the obstacle frame of reference
-        if obs[n].th_r: # Greater than 0
-            R[:,:,n] = compute_R(d,obs[n].th_r)
-        else:
-            R[:,:,n] = np.eye(d)
-
-        # Move to obstacle centered frame
-        x_t = R[:,:,n].T @ (x-obs[n].x0)
-        
-        E[:,:,n], Gamma[n], E_ortho = compute_basis_matrix(d,x_t,obs[n], R[:,:,n])
-                        
-        # if Gamma[n]<0.99: 
-        #     print(Gamma[n])
-    w = compute_weights(Gamma,N_obs)
-
-    #adding the influence of the rotational and cartesian velocity of the
-    #obstacle to the velocity of the robot
-    xd_obs = np.zeros((d))
-    
-    for n in range(N_obs):
-        if d==2:
-            xd_w = np.cross(np.hstack(([0,0], obs[n].w)),
-                            np.hstack((x-np.array(obs[n].x0),0)))
-            xd_w = xd_w[0:2]
-        elif d==3:
-            xd_w = np.cross( obs[n].w, x-obs[n].x0 )
-        else:
-            print('WARNING - NOT implemented for d={}'.format(d))
-
-        #the exponential term is very helpful as it help to avoid the crazy rotation of the robot due to the rotation of the object
-        xd_obs = xd_obs + w[n]*np.exp(-1/obs[n].sigma*(max([Gamma[n],1])-1))*  ( np.array(obs[n].xd) + xd_w )
-
-    xd = xd-xd_obs #computing the relative velocity with respect to the obstacle
-
-    xd_hat = np.zeros((d, N_obs))
-    M = np.zeros((d,d,N_obs))
-    
-    for n in range(N_obs):
-        if hasattr(obs[n], 'rho'):
-            rho = obs[n].rho
-        else:
-            rho = 1
-
-        d0 = np.ones((E.shape[1]-1))
-
-        if Gamma[n]==0:
-            print('Gamma:', Gamma[n])
-        #D = w[n]*(np.hstack((-1,d0))/abs(Gamma[n])**(1/rho))
-        D = (np.hstack((-1,d0))/abs(Gamma[n])**(1/rho))
-        #     if isfield(obs[n],'tailEffect') && ~obs[n].tailEffect && xdT*R(:,:,n)*E(:,1,n)>=0 #the obstacle is already passed, no need to do anything
-        #         D(1) = 0.0
-        if D[0] < -1.0:
-            D[1:] = d0
-            if xd.T @ R[:,:,n] @ E[:,1,n] < 0:
-                D[0] = -1.0
-        
-        M[:,:,n] = (R[:,:,n] @ E[:,:,n] @ np.diag(D+np.hstack((1,d0)) ) @ np.linalg.inv(E[:,:,n]) @ R[:,:,n].T)
-        xd_hat[:,n] = M[:,:,n] @ xd #velocity modulation
-
-    # Weighted interpolation
-    xd = np.sum(xd_hat*np.tile(w, (d-1, 1)), axis=1)
-    
-    #if LA.norm(M*xd)>0.05:
-    #    xd = LA.norm(xd)/LA.norm(M*xd)*M @xd #velocity modulation
-    
-    xd = xd + xd_obs # transforming back the velocity into the global coordinate system
-    
-    return xd
-
 
 def compute_basis_matrix(d,x_t,obs, R):
     # For an arbitrary shape, the next two lines are used to find the shape segment
@@ -776,25 +885,26 @@ def linearAttractorConst(x, x0 = 'default', velConst=2, distSlow=0.01):
 
 
 # def obs_avoidance_rk4(dt, x, obs, obs_avoidance=obs_avoidance_interpolation, ds=linearAttractor, x0='default'):
-def obs_avoidance_rk4(dt, x, obs, obs_avoidance=obs_avoidance_interpolation, ds=linearAttractorConst, x0='default'):
+def obs_avoidance_rk4(dt, x, obs, obs_avoidance=obs_avoidance_interpolation_moving, ds=linearAttractorConst, x0='default', k_f=0.75):
+
     # TODO -- add prediction of obstacle movement.
     # k1
-    xd = ds(x, x0)
+    xd = ds(x, x0)*k_f
     xd = obs_avoidance(x, xd, obs)
     k1 = dt*xd
 
     # k2
-    xd = ds(x+0.5*k1, x0)
+    xd = ds(x+0.5*k1, x0)*k_f
     xd = obs_avoidance(x+0.5*k1, xd, obs)
     k2 = dt*xd
 
     # k3
-    xd = ds(x+0.5*k2, x0)
+    xd = ds(x+0.5*k2, x0)*k_f
     xd = obs_avoidance(x+0.5*k2, xd, obs)
     k3 = dt*xd
 
     # k4
-    xd = ds(x+k3, x0)
+    xd = ds(x+k3, x0)*k_f
     xd = obs_avoidance(x+k3, xd, obs)
     k4 = dt*xd
 
