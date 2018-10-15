@@ -10,7 +10,7 @@ def ellipse(x_t, a=[1,1], p=[1,1]):
 class Obstacle: # Obstacle 
     """ Class of obstacles """
     # self.N_obs = 0
-    def __init__(self,  th_r=0, sf=1, xd=[0,0], sigma=1,  w=0, x_start=0, x_end=0, timeVariant=False, a=[1,1], p=[1,1], x0=[0,0], rad_func='default'):
+    def __init__(self,  th_r=0, sf=1, xd=[0,0], sigma=1,  w=0, x_start=0, x_end=0, timeVariant=False, a=[1,1], p=[1,1], x0=[0,0], hirarchy=0, parent='root', children=[],  rad_func='default'):
 
         if type(rad_func)==str and rad_func=='default':
             rad_func = ellipse
@@ -22,6 +22,16 @@ class Obstacle: # Obstacle
         self.x0 = x0
         self.th_r = th_r
         self.sf = sf
+
+        # Trees of stars -- hirarchy
+        self.hirarchy = hirarchy
+        self.parent = parent  # if root --- no parent
+        self.children = children
+
+        # Important point for trees of stars
+        self.lin_ds_saddle_entr = 0
+        self.lin_ds_saddle_exit = 0
+    
         
         self.sigma = sigma
 

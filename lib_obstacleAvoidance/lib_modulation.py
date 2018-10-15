@@ -101,7 +101,7 @@ def obs_avoidance_ellipsoid(x, xd, obs):
         #print('d0', d0)
         #print('E', E)
         d0 = np.ones((E.shape[1]-1))
-s
+
         if Gamma[n]==0:
             if not w[n]==0:
                 print('Gamma:', Gamma[n])
@@ -422,7 +422,7 @@ def obs_avoidance_nonlinear(x, xd, obs, ds,):
 
         # Move to obstacle centered frame
         x_t = R[:,:,n].T @ (x-obs[n].x0)
-v        
+        
         E[:,:,n], Gamma[n], E_ortho = compute_basis_matrix( d,x_t,obs[n], R[:,:,n])
                         
         # if Gamma[n]<0.99: 
@@ -569,7 +569,7 @@ v
         if mag_initLin:
             angle_initial_linear = angle_initial_linear/mag_initLin
             
-        angle_initial_nonlinear = np.copysign(np.cos(e_magnitude.T @ f_nonlinear/),
+        angle_initial_nonlinear = np.copysign(np.cos(e_magnitude.T @ f_nonlinear),
                                             np.sin(e_magnitude.T @ f_nonlinear) )
         mag_initNonlin = LA.norm(f_nonlinear)
         if mag_initNonlin:
@@ -578,7 +578,7 @@ v
         if angle_initial_linear:
             angle_nonlinear = angle_linear/angle_initial_linear*angle_initial_nonlinear
         else:
-                
+            print('and what else!')
 
     return xd
 
