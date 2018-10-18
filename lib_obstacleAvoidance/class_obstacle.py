@@ -29,8 +29,8 @@ class Obstacle: # Obstacle
         self.children = children
 
         # Important point for trees of stars
-        self.lin_ds_saddle_entr = 0
-        self.lin_ds_saddle_exit = 0
+        self.saddle_entr = 0
+        self.saddle_exit = 0
     
         
         self.sigma = sigma

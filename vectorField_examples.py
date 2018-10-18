@@ -24,8 +24,77 @@ if not any (lib_string in s for s in sys.path):
 
 from simulationVectorFields import *
 
-options=[9]
+options=[-2]
 for option in options:
+    if option==-2:
+
+        xlim = [-0.8,7]
+        ylim = [-3.3,3.3]
+
+        xAttractor=[0,0]
+
+        N_points=50
+        saveFigures=False
+
+        obs=[]
+        # Obstacle 2
+        a = [0.4,2.2]
+        p = [1,1]
+        x0 = [3,0]
+        th_r = 0/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        #obs[n].center_dyn = np.array([2,1.4])
+
+        
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='twoskewEllipses', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
+
+
+    
+    if option==-1:
+
+        xlim = [-0.1,8]
+        ylim = [-3,3]
+
+        xAttractor=[0,0]
+
+        N_points=50
+        saveFigures=False
+
+        obs = []
+        a=[0.4, 0.4]
+        p=[1,1]
+        x0=[2,0.1]
+        th_r=-50/180*pi
+        sf=1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        #obs[n].center_dyn = np.array([2,1.4])
+
+        # Obstacle 2
+        a = [0.4,0.4]
+        p = [1,1]
+        x0 = [6,-0.2]
+        th_r = 50/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        #obs[n].center_dyn = np.array([2,1.4])
+
+        a=[0.4, 0.4]
+        p=[1,1]
+        x0=[3,1.2]
+        th_r=-50/180*pi
+        sf=1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        #obs[n].center_dyn = np.array([2,1.4])
+
+        a=[0.4, 0.4]
+        p=[1,1]
+        x0=[5,-0.7]
+        th_r=-50/180*pi
+        sf=1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='twoskewEllipses', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_wavy_DS, nonlinear=True)
     if option==0:
 
         xlim = [-0.1,8]

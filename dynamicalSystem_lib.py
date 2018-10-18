@@ -48,7 +48,7 @@ def nonlinear_wavy_DS(x, x0=[0,0]):
         xd[1] = - x[1]
     return xd
 
-def nonlinear_stable_DS(x, x0=[0,0], pp=3):
+def nonlinear_stable_DS(x, x0=[0,0], pp=3 ):
     xd = np.zeros((np.array(x).shape))
     if len(xd.shape)>1:
         xd[0,:] = - x[1,:]

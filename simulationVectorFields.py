@@ -40,7 +40,7 @@ from obs_dynamic_center_3d import *
 
 
 
-def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, obs=[], sysDyn_init=False, xAttractor = np.array(([0,0])), saveFigure = False, figName='default', noTicks=True, showLabel=True, figureSize=(7.,6), obs_avoidance_func=obs_avoidance_convergence, attractingRegion=False, drawVelArrow=False, colorCode=False, streamColor=[0.05,0.05,0.7], obstacleColor=[], plotObstacle=True, plotStream=True, figHandle=[], alphaVal=1, dynamicSystem=linearAttractor):
+def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, obs=[], sysDyn_init=False, xAttractor = np.array(([0,0])), saveFigure = False, figName='default', noTicks=True, showLabel=True, figureSize=(7.,6), obs_avoidance_func=obs_avoidance_convergence, attractingRegion=False, drawVelArrow=False, colorCode=False, streamColor=[0.05,0.05,0.7], obstacleColor=[], plotObstacle=True, plotStream=True, figHandle=[], alphaVal=1, dynamicalSystem=linearAttractor, nonlinear=False):
     #fig_ifd, ax_ifd = plt.subplots(figsize=(10,8)) 
     if len(figHandle): 
         fig_ifd, ax_ifd = figHandle[0], figHandle[1] 
@@ -76,12 +76,15 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
     for ix in range(N_x):
         for iy in range(N_y):
             pos = np.array([XX[ix,iy],YY[ix,iy]])
-            
-            xd_init[:,ix,iy] = dynamicSystem(pos, x0 = xAttractor ) # initial DS
-            xd_init[:,ix,iy] = constVelocity(xd_init[:,ix,iy], pos)
-            
-            xd_IFD[:,ix,iy] = obs_avoidance(pos, xd_init[:,ix,iy], obs) # modulataed DS with IFDs
-            #xd_IFD[:,ix,iy] = constVelocity(xd_IFD[:,ix,iy], pos)
+
+            if nonlinear:
+                xd_IFD[:,ix,iy] = obs_avoidance(pos, dynamicalSystem, obs)
+            else:
+                xd_init[:,ix,iy] = dynamicalSystem(pos, x0 = xAttractor ) # initial DS
+                #xd_init[:,ix,iy] = constVelocity(xd_init[:,ix,iy], pos)
+                xd_IFD[:,ix,iy] = obs_avoidance(pos, xd_init[:,ix,iy], obs) # modulataed DS with IFoDs
+                #xd_IFD[:,ix,iy] = constVelocity(xd_IFD[:,ix,iy], pos)
+    
 
     if sysDyn_init:
         #fig_init, ax_init = plt.subplots(figsize=(10,8))
