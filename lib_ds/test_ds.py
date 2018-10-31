@@ -20,7 +20,7 @@ from lpvDS import *
 print("\nStart script.....\n")
 ########################################################
 
-ds_gmm_dict=yaml.load(open(lib_string+'2D-U-Nav.yml')) 
+ds_gmm_dict=yaml.load(open(lib_string + 'model/' + '2D-U-Nav.yml')) 
 
 #print(ds_GMM.keys())
 #if False:
