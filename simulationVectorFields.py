@@ -52,7 +52,7 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
         obs[n].draw_ellipsoid(numPoints=50) # 50 points resolution 
 
     # Adjust dynamic center 
-    #intersection_obs = obs_common_section(obs) 
+    intersection_obs = obs_common_section(obs) 
     #print('intersection_obs', intersection_obs) 
     #dynamic_center_3d(obs, intersection_obs) 
 
@@ -75,17 +75,15 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
     xd_IFD  = np.zeros((2,N_x,N_y))
     for ix in range(N_x):
         for iy in range(N_y):
-            pos = np.array([XX[ix,iy],YY[ix,iy]])
-
             if nonlinear:
-                xd_IFD[:,ix,iy] = obs_avoidance(pos, dynamicalSystem, obs)
+                xd_IFD[:,ix,iy] = obs_avoidance_func(np.array([XX[ix,iy],YY[ix,iy]]), dynamicalSystem, obs, attractor=xAttractor)
             else:
+                pos = np.array([XX[ix,iy],YY[ix,iy]])
                 xd_init[:,ix,iy] = dynamicalSystem(pos, x0 = xAttractor ) # initial DS
                 #xd_init[:,ix,iy] = constVelocity(xd_init[:,ix,iy], pos)
                 xd_IFD[:,ix,iy] = obs_avoidance(pos, xd_init[:,ix,iy], obs) # modulataed DS with IFoDs
                 #xd_IFD[:,ix,iy] = constVelocity(xd_IFD[:,ix,iy], pos)
     
-
     if sysDyn_init:
         #fig_init, ax_init = plt.subplots(figsize=(10,8))
         fig_init, ax_init = plt.subplots(figsize=(5,2.5))

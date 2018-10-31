@@ -6,141 +6,198 @@ Obstacle Avoidance Algorithm script with vecotr field
 @date 2018-02-15
 '''
 
+
 # Command to automatically reload libraries -- in ipython before exectureion
 import numpy as np
 import matplotlib.pyplot as plt
 
-#from math import sin, cos, atan2,
+from math import pi
+
 #first change the cwd to the script path
 #scriptPath = os.path.realpath(os.path.dirname(sys.argv[0]))
 #os.chdir(scriptPath)
 
 import sys
  
-# Custom libraries
-from dynamicalSystem_lib import *
 
-#if not isinstance("./lib_obstacleAvoidance", sys.path):
-#lib_string = "./lib_obstacleAvoidance/"
 lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 
-#from draw_ellipsoid import *
-#from lib_obstacleAvoidance import obs_check_collision_2d
-#from class_obstacle import *
-#from lib_modulation import *
-#from obs_common_section import *
-#from obs_dynamic_center_3d import *
 from simulationVectorFields import *
+# Custom libraries
 from dynamicalSystem_lib import *
 
-def pltLines(pos0, pos1, xlim=[-100,100], ylim=[-100,100]):
-    if pos1[0]-pos0[0]: # m < infty
-        m = (pos1[1] - pos0[1])/(pos1[0]-pos0[0])
+saveFigures=True
+
+
+options=[3]
+for option in options:
+    if option==-1:
+        theta = 0*pi/180
+        n = 0
+
+        pos = np.zeros((2))
+        pos[0]= obs[n].a[0]*np.cos(theta)
+        pos[1] = np.copysign(obs[n].a[1], theta)*(1 - np.cos(theta)**(2*obs[n].p[0]))**(1./(2.*obs[n].p[1]))
+
+        pos = obs[n].rotMatrix @ pos + obs[n].x0
         
-        ylim=[0,0]
-        ylim[0] = pos0[1] + m*(xlim[0]-pos0[0])
-        ylim[1] = pos0[1] + m*(xlim[1]-pos0[0])
-    else:
-        xlim = [pos1[0], pos1[0]]
-    
-    plt.plot(xlim, ylim, '--', color=[0.3,0.3,0.3], linewidth=2)
+        xd = obs_avoidance_nonlinear_radial(pos, nonlinear_stable_DS, obs, attractor=xAttractor)
+    if option==0:
 
-def getGammmaValue_ellipsoid(ob, x_t):
-    return np.sum((x_t/ob.a)**(2*p), axis=0)
+        xlim = [-0.8,7]
+        ylim = [-3.3,3.3]
 
-def findBoundaryPoint(ob, direction):
-    # Numerical search -- TODO analytic
-    dirNorm = LA.norm(direction,2)
-    if dirNorm:
-        direction = direction/dirNorm
-    else:
-        print('No feasible direction is given')
-        return ob.x0
+        xAttractor=[0,0]
 
-    a = [min(x0.a), max(x0.a)]
-
-    repetion = 6
-    steps = 10
-    # repetition
-    for ii in range(repetition):
-        magnitudDir = np.linspace(a[0], a[1], num=steps)
+        N_points=50
         
-        Gamma = getGammmaValue_ellipsoid(ob, direction*magnitudDir)
-        posBoundary = np.where(Gamma<1)[0][-1]
-
-        a[0] = magnitudeDir[posBoundary]
-
-        posBoundary +=1
-        while magnitudeDir[posBoundary]<=Gamma:
-            posBoundary+1
-
-        a[1] = magnitudeDir[posBoundary]
-
-    return (a[0]+a[1])/2.0*direction + x0
-
-def saddlePointsForConcave(obs, xAttractor=[0,0], ds_init):
-    hirarchyList = [0]
-
-    saddlePoints_entr = []
-    saddlePoints_exit = []
+        obs=[]
+        # Obstacle 2
+        a = [0.4,2.2]
+        p = [1,1]
+        x0 = [6,0]
+        th_r = 0/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        #obs[n].center_dyn = np.array([2,1.4])
 
         
-    for hirarchy in hirarchyList:
-        for o in range(len(obs)):
-            if obs[o].hirarchy == hirarchy:
-                if hirarchy: # nonzero
-                    saddlePoints_entr.append(findBoundaryPoint(obs[o], obs[obs[o].parent].saddle_entr - obs[o].x0 ) ) 
-                    saddlePoints_exit.append(findBoundaryPoint(obs[o], obs[obs[o].parent].saddle_exit - obs[o].x0 ) )
-                else: # hirarchy == 0
-                    saddlePoints_front.append(findBoundaryPoint(obs[o], -ds_init(obs[o].x0) ) )
-                    saddlePoints_back.append(findBoundaryPoint(obs[o], ds_init(obs[o].x0)))
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinearSystem', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
 
-                if len(obs[o].children):
-                    hirarchyList.append(hirarchyList[-1]+1)
-                continue
+    if option==1:
+        N_resolAxis=100
 
-    return [], []
+        xlim = [-0.8,5]
+        ylim = [-2.5,2.5]
 
-#options = [0]
-#for option in options:
-#    if option==0:
+        xAttractor=[0,0]
 
-xlim = [-1,14]
-ylim = [-2,7]
+        N_it = 4
+        for ii in range(N_it):
+            obs=[]
+            a = [0.5, 2]
+            p = [1,1]
+            x0 = [2.2, 0.1]
+            th_r = 30/180*pi
+            sf = 1
+            
+            #if ii>0:
+            if True:
+                # Obstacle 2
+                a = [a[jj]*(ii+0.01)/(N_it-1) for jj in range(len(a))]
+                obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        
+            Simulation_vectorFields(xlim, ylim, N_resolAxis, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinearGrowing'+str(ii), noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_wavy_DS, nonlinear=True)
 
-xAttractor = [0,0]
+    if option==2:
+        xlim = [0.3,13]
+        ylim = [-6,6]
 
-N_points = 40                   
-saveFigures = True 
+        xAttractor=[0,0]
 
-# globally_stable_DS(x, x0=[0,0]):
+        N_points=100
+        #saveFigures=True
 
-# Linear system and circular obstacle
-obs = []
+        obs=[]
+        # Obstacle 2
+        a = [0.9,5.0]
+        p = [1,1]
+        x0 = [5.5,0]
+        th_r = -30/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        #obs[n].center_dyn = np.array([2,1.4])
 
-a=[1, 4]
-p=[2,2]
-x0=[6,0]
-th_r=90/180*pi
-sf=1
-obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_modulation', noTicks=True, obs_avoidance_func=obs_avoidance_interpolation_moving, dynamicalSystem=nonlinear_stable_DS, nonlinear=False)
 
-a=[1, 3]
-p=[2,2]
-x0=[8+.8,1.5]
-th_r=0/180*pi
-sf=1
-obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_displacement', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
 
-a=[1, 3]
-p=[2,2]
-x0=[4-0.8,1.5]
-th_r=0/180*pi
-sf=1
-obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        obs = []
+        Simulation_vectorFields(xlim, ylim, N_points, obs=[], xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_noObs', noTicks=True, obs_avoidance_func=obs_avoidance_interpolation_moving, dynamicalSystem=nonlinear_stable_DS, nonlinear=False)
 
-saddlePoints, attrPoints = saddlePointsForConcave(obs, xAttractor)
 
-Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinearSys_avoidanceEllipse', noTicks=True, figureSize=(12,9) ) 
+    if option==3:
+        xlim = [0.3,13]
+        ylim = [-6,6]
+
+        xAttractor=[0,0]
+
+        N_points=110
+        #saveFigures=True
+
+        obs=[]
+        
+        a = [1.0,1.0]
+        p = [1,1]
+        x0 = [5.5,0]
+        th_r = 20/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+
+        a = [2.0,0.8]
+        p = [1,1]
+        x0 = [2,1]
+        th_r = 50/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+        a = [2.5,1.5]
+        p = [1,1]
+        x0 = [8,4]
+        th_r = 30/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+        a = [0.4,2.2]
+        p = [1,1]
+        x0 = [10,-3]
+        th_r = 80/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+        a = [0.9,1.1]
+        p = [1,1]
+        x0 = [3,-4]
+        th_r = 80/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_multipleObstacles', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
+
+
+    if option==4:
+        xlim = [0.3,13]
+        ylim = [-6,6]
+
+        xAttractor=[0,0]
+
+        N_points=120
+        #saveFigures=True
+
+        obs=[]
+        
+        a = [.80,3.0]
+        p = [1,1]
+        x0 = [5.5,-1]
+        th_r = 40/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        obs[-1].center_dyn = np.array([ 3.87541829,  0.89312174])
+
+        a = [1.0,3.0]
+        p = [1,1]
+        x0 = [5.0,2]
+        th_r = -50/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+        obs[-1].center_dyn = np.array([ 3.87541829,  0.89312174])
+        
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_intersectingObstacles', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
+        
+
+
+        # 

@@ -74,7 +74,7 @@ def onClick(event):
 ##### Anmation Function #####
 class Animated():
     """An animated scatter plot using matplotlib.animations.FuncAnimation."""
-    def __init__(self, x0, obs=[], N_simuMax = 600, dt=0.01, attractorPos='default', convergenceMargin=0.01, xRange=[-10,10], yRange=[-10,10], zRange=[-10,10], sleepPeriod=0.03):
+    def __init__(self, x0, obs=[], N_simuMax = 600, dt=0.01, attractorPos='default', convergenceMargin=0.01, xRange=[-10,10], yRange=[-10,10], zRange=[-10,10], sleepPeriod=0.03, nonlinear=False, RK4_int = False, dynamicalSystem=linearAttractor):
 
         self.dim = x0.shape[0]
 
@@ -108,6 +108,11 @@ class Animated():
         self.xd_ds = np.zeros(( self.dim, self.N_simuMax+1, self.N_points ))
         #self.t = np.linspace(( 0, self.N_simuMax*self.dt, num=self.N_simuMax ))
         self.t = np.linspace(0,self.N_simuMax+1,num=self.N_simuMax+1)*dt
+
+        # Simulation parameters
+        self.RK4_int = RK4_int
+        self.nonlinear = nonlinear
+        self.dynamicalSystem = dynamicalSystem
 
         self.converged = False
     
@@ -225,32 +230,41 @@ class Animated():
         return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints)
     
     def update(self, iSim):
+        if not plt.fignum_exists(self.fig.number):
+            anim.ani.event_source.stop()
+        
         #if saveFigure:
         if pause:        # NO ANIMATION -- PAUSE
             self.old_time=time.time()
             return (self.lines + self.obs_polygon + self.contour + self.centers + self.cent_dyns + self.startPoints + self.endPoints)
+
+        if not plt.fignum_exists(self.fig.number):
+            anim.ani.event_source.stop()
         
-        print('iteration num {} -- frame = {}'.format(self.iSim, iSim))
+        print('loop count={} - frame ={}-Simulation time ={}'.format(self.iSim, iSim, np.round(self.dt*self.iSim, 3) ))
 
         intersection_obs = obs_common_section(self.obs)
-        print('center before',obs[0].center_dyn)
+        #print('center before',obs[0].center_dyn)
         dynamic_center_3d(self.obs, intersection_obs)
-        print('center after',obs[0].center_dyn)
-        RK4_int = True
-        if RK4_int: # Runge kutta integration
+        #print('center after',obs[0].center_dyn)
+        
+        if self.RK4_int: # Runge kutta integration
             for j in range(self.N_points):
                 self.x_pos[:, self.iSim+1,j] = obs_avoidance_rk4(self.dt, self.x_pos[:,self.iSim,j], self.obs, x0=self.attractorPos, obs_avoidance = obs_avoidance_interpolation)
+
+            #self.x_pos[:, self.iSim+1,j] = obs_avoidance_rk4(self.dt, self.x_pos[:,self.iSim,j], self.obs, x0=self.attractorPos, obs_avoidance = obs_avoidance_modulation)
+            
+        elif self.nonlinear:
+            for j in range(self.N_points):
+                self.xd_ds[:,self.iSim,j] = obs_avoidance_nonlinear_radial(self.x_pos[:,self.iSim, j], self.dynamicalSystem, obs, self.attractorPos)
+                self.x_pos[:,self.iSim+1,:] = self.x_pos[:,self.iSim, :] + self.xd_ds[:,self.iSim, :]*self.dt
                 
         else: # Simple euler integration
             # Calculate DS
             for j in range(self.N_points):
-                #xd_temp = linearAttractor_const(self.x_pos[:,self.iSim, j], self.attractorPos, velConst=0.01, distSlow=0.01)
-                xd_temp = constVelocity(self.x_pos[:,self.iSim, j], self.attractorPos, velConst=0.001, distSlow=0.01)
-                #self.xd_ds[:,self.iSim,j] = obs_avoidance_convergence(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
-                xd_temp = xd_temp
+                xd_temp = linearAttractor(self.x_pos[:,self.iSim, j], self.attractorPos)
+                
                 self.xd_ds[:,self.iSim,j] = obs_avoidance_interpolation_moving(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
-                #self.xd_ds[:,self.iSim,j] = obs_avoidance_interpolation(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
-                #self.xd_ds[:,self.iSim,j] = obs_avoidance_interpolation_bad(self.x_pos[:,self.iSim, j], xd_temp, self.obs)
                 self.x_pos[:,self.iSim+1,:] = self.x_pos[:,self.iSim, :] + self.xd_ds[:,self.iSim, :]*self.dt
         
         self.t[self.iSim+1] = (self.iSim+1)*self.dt
@@ -376,7 +390,9 @@ def samplePointsAtBorder(N, xRange, yRange):
     return x_init
 
     
-simuCase=4
+simuCase=12
+
+
 if simuCase==0:
     N = 10
     x_init = np.vstack((np.ones(N)*20,
@@ -941,6 +957,52 @@ if simuCase ==11:
         anim.ani.save('ani/animation_multipleObstacles_conv.mp4', dpi=100, fps=25)
         print('Saving finished.')
 
+
+if simuCase==12:
+    N = 10
+    ### Create obstacle 
+    obs = []
+    a = [5, 2] 
+    p = [1, 1]
+    x0 = [10.0, 0]
+    th_r = 30/180*pi
+    sf = 1.
+
+    #xd=[0, 0]
+    w = 3
+    x_start = 0
+    x_end = 2
+
+    a = [3,0.8]
+    p = [1,1]
+    x0 = [3,0]
+    th_r = 100/180*pi
+    sf = 1.
+
+    xd=[0., 0]
+    w = 10
+    x_start = 0
+    x_end = 10
+    
+    obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, xd=xd, x_start=x_start, x_end=x_end, w=w))
+    #obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+    
+    xRange = [ -1,8]
+    yRange = [-4,4]
+    x_init = np.vstack((np.ones(N)*xRange[1],
+                            np.linspace(yRange[0],yRange[1],num=N) ))
+    #x_init = np.array([[12],[1]])
+
+    #obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+    attractorPos = [0,0]
+
+    #anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.001, N_simuMax=2080, convergenceMargin=0.3, sleepPeriod=0.01,attractorPos=attractorPos, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
+
+    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.001, N_simuMax=2080, convergenceMargin=0.3, sleepPeriod=0.01,attractorPos=attractorPos, dynamicalSystem=linearAttractor, nonlinear=True)
+
+    #anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.001, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
+
 if saveFigure:
     anim.ani.save('ani/test.mp4', dpi=100,fps=50)
     print('Saving finished.')
@@ -952,11 +1014,9 @@ else:
 #if True:
     #anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, zRange=zRange, dt=0.005, N_simuMax=200000, convergenceMargin=0.3, sleepPeriod=0.01, )
     #
+    
 
 print()
 print('---- Script finished ---- ')
 print() # THE END
-    
-    
-    
     

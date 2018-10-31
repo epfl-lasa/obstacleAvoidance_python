@@ -7,6 +7,7 @@ Library of different dynamical systems
 '''
 
 import numpy as np
+import numpy.linalg as LA
 
 
 def linearAttractor(x, x0='default'):
@@ -24,7 +25,6 @@ def linearAttractor(x, x0='default'):
     xd = -(x-x0)
     
     return xd
-
 
 def linearAttractor_const(x, x0 = 'default', velConst=0.3, distSlow=0.01):
     # change initial value for n dimensions
@@ -48,6 +48,7 @@ def nonlinear_wavy_DS(x, x0=[0,0]):
         xd[1] = - x[1]
     return xd
 
+
 def nonlinear_stable_DS(x, x0=[0,0], pp=3 ):
     xd = np.zeros((np.array(x).shape))
     if len(xd.shape)>1:
@@ -59,11 +60,28 @@ def nonlinear_stable_DS(x, x0=[0,0], pp=3 ):
     return xd
 
 
+def constVelocity_distance(dx, x, x0=[0,0], velConst = 1.0, distSlow=0.1):
+    #return dx
+    dx_mag = LA.norm(dx)
+    if not dx_mag:
+        return dx
+    dx = dx/dx_mag
+            
+    xt_mag = LA.norm(x-x0)
+    
+    return np.min([1, xt_mag/distSlow])*velConst*dx
 
-def constVelocity(dx, x, x0=[0,0], velConst = 0.2, distSlow=0.01):
+
+def constVelocity(dx, x, x0=[0,0], velConst = 0.4, distSlow=0.01):
     dx_mag = np.sqrt(np.sum(np.array(dx)**2))
     
     if dx_mag: # nonzero value
         dx = min(1, 1/dx_mag)*velConst*dx
 
     return dx
+
+
+def constVel(xd, const_vel=0.3):
+    xd_norm = np.sqrt(np.sum(xd**2))
+    if xd_norm==0: return xd
+    return xd/xd_norm*const_vel

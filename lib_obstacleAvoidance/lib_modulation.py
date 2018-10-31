@@ -20,7 +20,7 @@ if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
     
 from lib_obstacleAvoidance import *
-from dynamicalSystem_lib import linearAttractor
+from dynamicalSystem_lib import *
 
 import warnings
 
@@ -766,7 +766,6 @@ def obs_avoidance_interpolation_moving(x, xd, obs, attractor='none'):
     return xd
 
 
-
 def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
     # (dt, x, obs, obs_avoidance=obs_avoidance_interpolation_moving, ds=linearAttractorConst, x0='default', k_f=0.75):
     # TODO -- speed up for multiple obstacles, not everything needs to be safed...
@@ -774,19 +773,24 @@ def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
     # Initialize Variables
     N_obs = len(obs) #number of obstacles
     if N_obs ==0:
-        return xd
+        return ds_init(x)
     
     d = x.shape[0]
     Gamma = np.zeros((N_obs))
     
     if type(attractor)==str:
-        
         if attractor=='default': # Define attractor position
-            attractor = np.zeros((d))
+            attractor = np.zeros((d,1))
             N_attr = 1
+        else: # none
+            N_attr=0
     else:
-        N_attr = 1 # TODO -- measure length in case of several attractors, use matrix
-                
+        attractor = np.array(attractor)
+        if len(attractor.shape)==1:
+            attractor = np.array(([attractor])).T
+
+        N_attr = attractor.shape[1]
+            
 
     # Linear and angular roation of velocity
     xd_dx_obs = np.zeros((d,N_obs))
@@ -797,6 +801,8 @@ def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
     E_orth = np.zeros((d,d,N_obs))
     
     R = np.zeros((d,d,N_obs))
+    x_t = np.zeros((d, N_obs))
+    
 
     for n in range(N_obs):
         # rotating the query point into the obstacle frame of reference
@@ -806,26 +812,31 @@ def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
             R[:,:,n] = np.eye(d)
 
         # Move to obstacle centered frame
-        x_t = R[:,:,n].T @ (x-obs[n].x0)
+        x_t[:,n] = R[:,:,n].T @ (x-obs[n].x0)
         
-        E[:,:,n], Gamma[n], E_orth[:,:,n] = compute_basis_matrix( d,x_t,obs[n], R[:,:,n])
-        
+        E[:,:,n], Gamma[n], E_orth[:,:,n] = compute_basis_matrix( d,x_t[:,n],obs[n], R[:,:,n])
+
+    for a in range(N_attr):
+        # Eucledian distance -- other options possible
+        Gamma_a = LA.norm(x-attractor[:,a])
         # if Gamma[n]<0.99: 
         #     print(Gamma[n])
-    w = compute_weights(Gamma,N_obs)
+    # The attractors are also included in the weight
+    w = compute_weights(np.hstack((Gamma,Gamma_a)),N_obs+N_attr)
 
     # Loop to find new DS-evaluation point
     delta_x = np.zeros((d))
     for o in range(N_obs):
-        directionX = x_t-obs[o].x0
-        distToCenter = LA.norm(directionX)
+        distToCenter = LA.norm(x_t[:,o])
         if distToCenter > 0:
-            directionX /= distToCenter
+            directionX = -x_t[:,o]/ distToCenter
         else:
             print("warning -- collision with obstacle!")
             delta_x = np.zeros((d))
             break
 
+        #import pdb; pdb.set_trace() ## DEBUG ##
+        
         rad_obs = findRadius(obs[o], directionX)
         
         # r_obs = norm(x_obs);
@@ -834,14 +845,15 @@ def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
         p =1;
         delta_r = rad_obs*(1/Gamma[o])**p;
 
-        delta_x = delta_r*directionX
+        delta_x = delta_x + w[o]* (R[:,:,o] @ (delta_r*directionX))
         
         # % Calculate now center
         #x_hat = (r-delta_r)/r_x*x_t;
 
         # Move x_hat to original coordinate system
         #x_hat = R[:,:,n].T*x_hat + obs[o].x0;
-
+#    import pdb; pdb.set_trace() ## DEBUG ##
+    
     xd = ds_init(x+delta_x)
 
     #adding the influence of the rotational and cartesian velocity of the
@@ -938,14 +950,11 @@ def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
         
     xd_mags = np.sqrt(np.sum(xd_hat**2, axis=0) )
 
-    if not type(attractor)==str:
+    if N_attr:
         # Enforce convergence in the region of the attractor
-        d_a = np.linalg.norm(x - np.array(attractor)) # Distance to attractor
-        
-        w = compute_weights(np.hstack((Gamma, [d_a])), N_obs+N_attr)
-
+        #d_a = np.linalg.norm(x - np.array(attractor)) # Distance to attractor
+        #w = compute_weights(np.hstack((Gamma, [d_a])), N_obs+N_attr)
         k_ds = np.hstack((k_ds, np.zeros((d-1, N_attr)) )) # points at the origin
-
         xd_mags = np.hstack((xd_mags, np.linalg.norm((xd))*np.ones(N_attr) ))
         
     # Weighted interpolation
@@ -967,7 +976,11 @@ def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
         n_xd = Rf.T @ np.hstack((1, k_d ))
 
     xd = xd_mag*n_xd.squeeze()
-    
+
+    closestAttr = np.argmin( LA.norm(np.tile(x, (N_attr,1)).T - attractor, axis=0) )
+    xd = constVelocity_distance(xd, x, x0=attractor[:,closestAttr],
+                                velConst = 10.0, distSlow=0.1)
+
     #if LA.norm(M*xd)>0.05:
     #    xd = LA.norm(xd)/LA.norm(M*xd)*M @xd #velocity modulation
 
@@ -994,10 +1007,12 @@ def findRadius(ob, direction, a = [], repetition = 6, steps = 10):
         
         magnitudeDir = np.linspace(a[0], a[1], num=steps)
         Gamma = getGammmaValue_ellipsoid(ob, np.tile(direction, (steps,1)).T*np.tile(magnitudeDir, (np.array(ob.x0).shape[0],1)) )
+        #import pdb; pdb.set_trace() ## DEBUG ##
+        if np.sum(Gamma==1):
+            return magnitudeDir[np.where(Gamma==1)]
         posBoundary = np.where(Gamma<1)[0][-1]
 
         a[0] = magnitudeDir[posBoundary]
-
         posBoundary +=1
         while Gamma[posBoundary]<=1:
             posBoundary+=1
@@ -1020,9 +1035,6 @@ def findBoundaryPoint(ob, direction):
 
     
     return (a[0]+a[1])/2.0*direction + x0
-
-
-
 
 
 
@@ -1171,8 +1183,6 @@ def obs_avoidance_rk4(dt, x, obs, obs_avoidance=obs_avoidance_interpolation_movi
     return x
 
 
-
-
     
 def orthogonalBasisMatrix(v):
     dim = v.shape[0]
@@ -1180,14 +1190,6 @@ def orthogonalBasisMatrix(v):
     V = np.eye((dim))
     
     return V
-
-def constVel(xd, const_vel=0.3):
-    
-    xd_norm = np.sqrt(np.sum(xd**2))
-
-    if xd_norm==0: return xd
-    
-    return xd/xd_norm*const_vel
 
 
 #def constVel_pos(xd, x, x_attr, kFact=0.3, v_max=1):

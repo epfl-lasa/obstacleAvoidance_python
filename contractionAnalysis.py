@@ -152,7 +152,7 @@ for ix in range(N_x):
 #         l_n = 1-1/(Gamma)
 #         l_t = 1+1/(Gamma)
         
-        # Jacobian Original
+        # Jacobian Originalo
         determinant[ix, iy], trace[ix,iy] = contraction_det_trace(x1, x2, l_n, l_t, t1, t2, d1)
 
         sqrtDet = cmath.sqrt(trace[ix,iy]**2/4 - determinant[ix,iy])

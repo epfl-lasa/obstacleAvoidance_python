@@ -37,7 +37,7 @@ class Obstacle: # Obstacle
 
         self.d = len(x0) #Dimension of space
         
-        self.R = []
+        self.rotMatrix = []
         self.compute_R() # Compute Rotation Matrix
         
         self.resolution = 0 #Resolution of drawing

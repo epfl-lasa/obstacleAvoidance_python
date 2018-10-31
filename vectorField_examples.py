@@ -1,8 +1,11 @@
-
-### -------------------------------------------------
+# coding: utf-8
+""" -------------------------------------------------
 # Start main function
-#plt.close("all") # close figures
 
+@author lukashuber
+@date 20181019
+
+"""
 # Command to automatically reload libraries -- in ipython before exectureion
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,7 +43,7 @@ for option in options:
         # Obstacle 2
         a = [0.4,2.2]
         p = [1,1]
-        x0 = [3,0]
+        x0 = [6,0]
         th_r = 0/180*pi
         sf = 1
         obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
@@ -48,8 +51,6 @@ for option in options:
 
         
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='twoskewEllipses', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
-
-
     
     if option==-1:
 
@@ -403,7 +404,7 @@ for option in options:
 #N_points = 100
 
 #xAttractor = np.array([0,1.3])
-
+p
 #Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor)
 
 #Simulation_vectorFields([-10,10],[-10,10], 30, 30, obs)
