@@ -1,5 +1,9 @@
 """
+
 Test DS lpvDS
+@author lukashuber
+@20181105
+
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,7 +24,8 @@ from lpvDS import *
 print("\nStart script.....\n")
 ########################################################
 
-ds_gmm_dict=yaml.load(open(lib_string + 'model/' + '2D-U-Nav.yml')) 
+ds_gmm_dict=yaml.load(open(lib_string + 'model/' + '2D-U-Nav.yml'))
+#1ds_gmm_dict=yaml.load(open(lib_string + 'model/' + '2D-W-Nav.yml')) 
 
 #print(ds_GMM.keys())
 #if False:
@@ -37,7 +42,7 @@ dim = int(ds_gmm_dict['M'])
 x_range = [-2,13]
 y_range = [-6,6]
 
-N = 10
+N = 100
 figureSize=(7.,6)
 streamColor=[0.05,0.05,0.7]
 
@@ -62,11 +67,12 @@ for ix in range(N_x):
 
 fig_nli, ax_nli = plt.subplots(figsize=figureSize)
 
-xd1 = np.squeeze(xd_init[0,:,:])
-xd2 = np.squeeze(xd_init[0,:,:])
-ax_nli.streamplot(XX, YY,
-                  np.squeeze(xd_init[0,:,:]),np.squeeze(xd_init[1,:,:]),
-                  color=streamColor)
+
+ax_nli.streamplot(XX, YY, np.squeeze(xd_init[0,:,:]),np.squeeze(xd_init[1,:,:]),color=streamColor)
+#ax_nli.quiver(XX, YY, np.squeeze(xd_init[0,:,:]),np.squeeze(xd_init[1,:,:]),color=streamColor)
+plt.gca().set_aspect('equal', adjustable='box')
+                  
+                  
 
 plt.ion()
 plt.show()

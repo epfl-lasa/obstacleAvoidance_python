@@ -28,10 +28,10 @@ from simulationVectorFields import *
 # Custom libraries
 from dynamicalSystem_lib import *
 
-saveFigures=True
+saveFigures=False
 
 
-options=[3]
+options=[4]
 for option in options:
     if option==-1:
         theta = 0*pi/180
@@ -200,4 +200,3 @@ for option in options:
         
 
 
-        # 

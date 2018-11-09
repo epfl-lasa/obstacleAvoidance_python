@@ -81,7 +81,7 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
                 pos = np.array([XX[ix,iy],YY[ix,iy]])
                 xd_init[:,ix,iy] = dynamicalSystem(pos, x0 = xAttractor ) # initial DS
                 #xd_init[:,ix,iy] = constVelocity(xd_init[:,ix,iy], pos)
-                xd_IFD[:,ix,iy] = obs_avoidance(pos, xd_init[:,ix,iy], obs) # modulataed DS with IFoDs
+                xd_IFD[:,ix,iy] = obs_avoidance(pos, xd_init[:,ix,iy], obs) # modulataed DS with IFD
                 #xd_IFD[:,ix,iy] = constVelocity(xd_IFD[:,ix,iy], pos)
     
     if sysDyn_init:
@@ -111,8 +111,6 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
             strm = res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=velMag, cmap='winter', norm=matplotlib.colors.Normalize(vmin=0, vmax=10.) )
             #fig_cc = plt.figure()
             #fig_cc.colorbar(strm.lines)
-            #import pdb; pdb.set_trace() ## DEBUG ##
-
         else:
             res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=streamColor)
             #res_ifd.set_alpha(alphaVal)
