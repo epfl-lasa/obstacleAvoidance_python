@@ -4,7 +4,7 @@ import sys
 import numpy as np
 
 # ---------- Import Custom libraries ----------
-lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacle Avoidance/"
+lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
 if not any(lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 
@@ -71,7 +71,7 @@ if simuCase==0:
     th_r = -40/180*pi
     sf = 1.
 
-    xd=[0.25, 1]ami
+    xd=[0.25, 1]
     w = 0
     x_start = 0
     x_end = 10
@@ -448,11 +448,7 @@ if simuCase ==7:
     anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.01, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
 
 
-
-    
-
-
-saveFigure = True
+saveFigure = False
 
 if saveFigure:
     anim.ani.save('ani/basic_animation.mp4', dpi=100,fps=50)

@@ -47,7 +47,7 @@ def pltLines(pos0, pos1, xlim=[-100,100], ylim=[-100,100]):
     
     plt.plot(xlim, ylim, '--', color=[0.3,0.3,0.3], linewidth=2)
 
-options = [3.0]
+options = [7]
 for option in options:
     if option==-1:
 
@@ -414,3 +414,31 @@ for option in options:
         obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
 
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='movingObstacle_notMoving', obs_avoidance_func=obs_avoidance_radialDisplace)
+
+    if option==7:
+        # Obstacle Avoidance with and without tail effect
+        
+        N_resol = 100
+        saveFigures=True
+
+        xlim = [-0.1,4]
+        ylim = [-2,2]
+
+        ### Three obstacles touching - convergence
+        xAttractor = np.array([0,0])
+        
+        obs = []
+        a = [0.35,1.4]
+        p = [1,1]
+        x0 = [1.9, 0.0]
+        th_r = -15/180*pi
+        sf = 1.0
+        xd = [-3,3]
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, tail_effect=False))
+        
+
+        Simulation_vectorFields(xlim, ylim, N_resol, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='ellipse_tailEffectOff', obs_avoidance_func=obs_avoidance_interpolation_moving, showLabel=False)
+
+        obs[0].tail_effect = True
+
+        Simulation_vectorFields(xlim, ylim, N_resol, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='ellipse_tailEffectOn', obs_avoidance_func=obs_avoidance_interpolation_moving, showLabel=False)

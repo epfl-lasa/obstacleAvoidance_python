@@ -24,6 +24,10 @@ lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_ob
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 
+lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/"
+if not any (lib_string in s for s in sys.path):
+    sys.path.append(lib_string)
+
 from simulationVectorFields import *
 # Custom libraries
 from dynamicalSystem_lib import *
@@ -31,7 +35,8 @@ from dynamicalSystem_lib import *
 saveFigures=False
 
 
-options=[4]
+options=[3
+]
 for option in options:
     if option==-1:
         theta = 0*pi/180
@@ -198,5 +203,3 @@ for option in options:
         
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_intersectingObstacles', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
         
-
-

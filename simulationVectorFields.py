@@ -71,7 +71,7 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
         obs_avoidance = obs_avoidance_func
         
     # Initialize array
-    xd_init = np.zeros((2,N_x,N_y))
+    xd_init = np.zeros((2,N_x,N_y))    
     xd_IFD  = np.zeros((2,N_x,N_y))
     for ix in range(N_x):
         for iy in range(N_y):

@@ -10,7 +10,7 @@ def ellipse(x_t, a=[1,1], p=[1,1]):
 class Obstacle: # Obstacle 
     """ Class of obstacles """
     # self.N_obs = 0
-    def __init__(self,  th_r=0, sf=1, xd=[0,0], sigma=1,  w=0, x_start=0, x_end=0, timeVariant=False, a=[1,1], p=[1,1], x0=[0,0], hirarchy=0, parent='root', children=[],  rad_func='default'):
+    def __init__(self,  th_r=0, sf=1, xd=[0,0], sigma=1,  w=0, x_start=0, x_end=0, timeVariant=False, a=[1,1], p=[1,1], x0=[0,0], hirarchy=0, parent='root', children=[],  rad_func='default', tail_effect=True):
 
         if type(rad_func)==str and rad_func=='default':
             rad_func = ellipse
@@ -34,6 +34,7 @@ class Obstacle: # Obstacle
     
         
         self.sigma = sigma
+        self.tail_effect = tail_effect # Modulation if moving away behind obstacle
 
         self.d = len(x0) #Dimension of space
         

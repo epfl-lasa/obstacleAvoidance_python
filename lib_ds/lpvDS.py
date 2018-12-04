@@ -78,7 +78,7 @@ class lpvDS:
             #ERROR()
         if (np.array(A).shape[0] != self.K*self.M*self.M):
             print("Initialization of A-matrices is wrong.")
-1            print("Size of vector should be K ({})*M({})*M({})={}".format(self.K, self.M, self.M, self.M*self.M*self.K) )
+            print("Size of vector should be K ({})*M({})*M({})={}".format(self.K, self.M, self.M, self.M*self.M*self.K) )
             print("Given vector is of size {}".format(np.array(A).shape[0]) ) 
             #ERROR()
 

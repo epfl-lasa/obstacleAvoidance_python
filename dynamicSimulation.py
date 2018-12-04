@@ -27,7 +27,7 @@ from math import pi
 import sys
  
 # ---------- Import Custom libraries ----------
-from dynamicalSystem_lib import *
+
 
 lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
 if not any (lib_string in s for s in sys.path):
@@ -45,8 +45,12 @@ from obs_common_section import *
 #from obs_dynamic_center import *
 from obs_dynamic_center_3d import *
 
+from dynamicalSystem_lib import *
+
 from matplotlib import animation
 plt.rcParams['animation.ffmpeg_path'] = '/usr/bin/ffmpeg'
+# plt.ion()
+# plt.show()
 
 # --------------  Start script --------------
 print()
@@ -152,8 +156,8 @@ class Animated():
         #self.tt1 = self.ax.text(.5, 1.05, '', transform = self.ax.transAxes, va='center', animated=True, )
         
         # Adjust dynamic center
-        intersection_obs = obs_common_section(self.obs)
-        dynamic_center_3d(self.obs, intersection_obs)
+        # intersection_obs = obs_common_section(self.obs)
+        # dynamic_center_3d(self.obs, intersection_obs)
         
         # Then setup FuncAnimation        
         self.ani = FuncAnimation(self.fig, self.update, interval=1, frames = self.N_simuMax-2, repeat=False, init_func=self.setup_plot, blit=True, save_count=self.N_simuMax-2)
@@ -243,14 +247,14 @@ class Animated():
         
         print('loop count={} - frame ={}-Simulation time ={}'.format(self.iSim, iSim, np.round(self.dt*self.iSim, 3) ))
 
-        intersection_obs = obs_common_section(self.obs)
+        # intersection_obs = obs_common_section(self.obs)
         #print('center before',obs[0].center_dyn)
-        dynamic_center_3d(self.obs, intersection_obs)
-        #print('center after',obs[0].center_dyn)
+        # dynamic_center_3d(self.obs, intersection_obs)
+        # print('center after',obs[0].center_dyn)
         
         if self.RK4_int: # Runge kutta integration
             for j in range(self.N_points):
-                self.x_pos[:, self.iSim+1,j] = obs_avoidance_rk4(self.dt, self.x_pos[:,self.iSim,j], self.obs, x0=self.attractorPos, obs_avoidance = obs_avoidance_interpolation)
+                self.x_pos[:, self.iSim+1,j] = obs_avoidance_rk4(self.dt, self.x_pos[:,self.iSim,j], self.obs, x0=self.attractorPos, obs_avoidance = obs_avoidance_interpolation_moving)
 
             #self.x_pos[:, self.iSim+1,j] = obs_avoidance_rk4(self.dt, self.x_pos[:,self.iSim,j], self.obs, x0=self.attractorPos, obs_avoidance = obs_avoidance_modulation)
             
@@ -359,8 +363,8 @@ class Animated():
         return next_time
 
 
+animationName = -1
 saveFigure=0
-    
 N = 4
 
 def samplePointsAtBorder(N, xRange, yRange):
@@ -390,7 +394,7 @@ def samplePointsAtBorder(N, xRange, yRange):
     return x_init
 
     
-simuCase=12
+simuCase=7
 
 
 if simuCase==0:
@@ -787,12 +791,12 @@ if simuCase==6:
     sf = 1
     obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
 
-if simuCase ==7:
+if simuCase==7:
     xAttractor = np.array([0,0])
     centr = [2, 2.5]
 
     obs = []
-    N = 8
+    N = 12
     R = 5
     th_r0 = 38/180*pi
     rCent=2.4
@@ -806,6 +810,8 @@ if simuCase ==7:
         
         obs[n].center_dyn=[obs[n].x0[0]-rCent*sin(obs[n].th_r),
                            obs[n].x0[1]+rCent*cos(obs[n].th_r)]
+
+        obs[n].tail_effect = True
     
     xRange = [-10,10]
     yRange = [-8,8]
@@ -813,12 +819,11 @@ if simuCase ==7:
     
     x_init = samplePointsAtBorder(N, xRange, yRange)
     
-    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.005, N_simuMax=500, convergenceMargin=0.3, sleepPeriod=0.01)
+    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.02, N_simuMax=1000, convergenceMargin=0.3, sleepPeriod=0.001, RK4_int=True)
 
-    if True: #save animation
-        
-        anim.ani.save('ani/animation_ring.mp4', dpi=100, fps=25)
-        print('Saving finished.')    
+
+    # animationName = 'ani/animation_ring_noConvergence.mp4'
+    animationName = 'ani/animation_ring_convergence.mp4'
 
 if simuCase ==8:
     xAttractor = np.array([0,0])
@@ -841,12 +846,10 @@ if simuCase ==8:
         
     x_init = samplePointsAtBorder(N, xRange, yRange)
     
-    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.005, N_simuMax=800, convergenceMargin=0.3, sleepPeriod=0.01)
+    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.0, N_simuMax=800, convergenceMargin=0.3, sleepPeriod=0.01)
 
-    if True: #save animation
-        anim.ani.save('ani/animation_movingCircle.mp4', dpi=100, fps=25)
-        print('Saving finished.')
-
+    animationName = 'ani/animation_movingCircle.mp4'
+        
 if simuCase ==9:
     xAttractor = np.array([0,0])
     centr = [2, 2.5]
@@ -997,26 +1000,72 @@ if simuCase==12:
 
     attractorPos = [0,0]
 
-    #anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.001, N_simuMax=2080, convergenceMargin=0.3, sleepPeriod=0.01,attractorPos=attractorPos, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
+    # anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.001, N_simuMax=2080, convergenceMargin=0.3, sleepPeriod=0.01,attractorPos=attractorPos, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
 
+    # anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.01, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
     anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.001, N_simuMax=2080, convergenceMargin=0.3, sleepPeriod=0.01,attractorPos=attractorPos, dynamicalSystem=linearAttractor, nonlinear=True)
 
     #anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.001, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
 
-if saveFigure:
-    anim.ani.save('ani/test.mp4', dpi=100,fps=50)
+if simuCase == 13:
+    # Parallel ellipses; flow going through
+    xAttractor = np.array([0,0])
+
+    th_r0 = 38/180*pi
+    obs = []
+    obs.append(Obstacle(
+        a = [4,0.4],
+        p = [1,1],
+        x0 = [0, 2],
+        th_r = 30/180*pi,
+        sf = 1.0))
+
+    n = 0
+    rCent = 3
+    # obs[n].center_dyn=[obs[n].x0[0], 
+                       # obs[n].x0[1]]
+    obs[n].center_dyn=[obs[n].x0[0]-rCent*np.cos(obs[n].th_r),
+                       obs[n].x0[1]-rCent*np.sin(obs[n].th_r)]
+
+    # obs.append(Obstacle(
+    #     a = [4,0.4],
+    #     p = [1,1],
+    #     x0 = [0, 4],
+    #     th_r = 30*180/pi,
+    #     sf = 1.0))
+    
+    # n = 1
+    # obs[n].center_dyn=[obs[n].x0[0]-rCent*np.cos(obs[n].th_r),
+    #                    obs[n].x0[1]-rCent*np.sin(obs[n].th_r)]
+    
+    xRange = [-5,5]
+    yRange = [-1,7]
+    N = 20
+    
+    x_init = samplePointsAtBorder(N, xRange, yRange)
+    
+    anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, dt=0.02, N_simuMax=1000, convergenceMargin=0.3, sleepPeriod=0.001, RK4_int=True)
+
+
+    animationName = 'ani/avoiding_ellipse.mp4'
+
+
+
+# saveFigure
+if True:
+# if saveFigure:
+    if type(animationName)==int:
+        anim.ani.save('ani/test.mp4', dpi=100,fps=50)
+    else:
+        anim.ani.save(animationName, dpi=100,fps=50)
     print('Saving finished.')
     plt.close('all')
 else:
     anim.show()
+    print('Animation')
 
 #if __name__ == '__main__':
 #if True:
     #anim = Animated(x_init, obs, xRange=xRange, yRange=yRange, zRange=zRange, dt=0.005, N_simuMax=200000, convergenceMargin=0.3, sleepPeriod=0.01, )
     #
-    
-
-print()
-print('---- Script finished ---- ')
-print() # THE END
-    
+print('\n\n---- Script finished ---- \n\n')

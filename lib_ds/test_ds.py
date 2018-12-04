@@ -24,8 +24,8 @@ from lpvDS import *
 print("\nStart script.....\n")
 ########################################################
 
-ds_gmm_dict=yaml.load(open(lib_string + 'model/' + '2D-U-Nav.yml'))
-#1ds_gmm_dict=yaml.load(open(lib_string + 'model/' + '2D-W-Nav.yml')) 
+#ds_gmm_dict=yaml.load(open(lib_string + 'model/' + '2D-U-Nav.yml'))
+ds_gmm_dict=yaml.load(open(lib_string + 'model/' + '2D-W-Nav.yml')) 
 
 #print(ds_GMM.keys())
 #if False:
@@ -42,7 +42,7 @@ dim = int(ds_gmm_dict['M'])
 x_range = [-2,13]
 y_range = [-6,6]
 
-N = 100
+N = 1500
 figureSize=(7.,6)
 streamColor=[0.05,0.05,0.7]
 
