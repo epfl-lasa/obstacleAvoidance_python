@@ -81,7 +81,31 @@ def constVelocity(dx, x, x0=[0,0], velConst = 0.4, distSlow=0.01):
     return dx
 
 
-def constVel(xd, const_vel=1.0):
+def constVel(xd, const_vel=2.0):
+    # dim = np.array(xd).shape[0]
+    
     xd_norm = np.sqrt(np.sum(xd**2))
     if xd_norm==0: return xd
+
     return xd/xd_norm*const_vel
+
+
+def linearDS_constVel(x, x_attr=[], const_vel=2.0):
+    dim = np.array(x).shape[0]
+
+    x_shape = x.shape
+    x = np.squeeze(x.reshape(dim, 1,-1))
+    
+    if not np.array(x_attr).shape[0]:
+        x_attr = np.zeros(dim) 
+    
+    if len(x.shape)==1: # in case of 1D input array
+        x = np.tile(x, (1,1)).T 
+        
+    xd = -(x - np.tile(x_attr, (x.shape[1], 1)).T)
+    
+    xd_norm = LA.norm(xd,axis=0)
+        
+    xd[:, xd_norm>0] = xd[:, xd_norm>0]/np.tile(xd_norm[xd_norm>0], (dim,1))*const_vel
+    
+    return xd.reshape(x_shape)

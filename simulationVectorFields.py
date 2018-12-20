@@ -108,6 +108,7 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
     if plotStream:
         if colorCode:
             velMag = np.linalg.norm(np.dstack((dx1_noColl, dx2_noColl)), axis=2 )/6*100
+                        
             strm = res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=velMag, cmap='winter', norm=matplotlib.colors.Normalize(vmin=0, vmax=10.) )
             #fig_cc = plt.figure()
             #fig_cc.colorbar(strm.lines)

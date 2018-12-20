@@ -47,7 +47,7 @@ def pltLines(pos0, pos1, xlim=[-100,100], ylim=[-100,100]):
     
     plt.plot(xlim, ylim, '--', color=[0.3,0.3,0.3], linewidth=2)
 
-options = [9]
+options = [-1]
 for option in options:
     if option==-1:
 
