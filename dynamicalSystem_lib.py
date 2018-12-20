@@ -81,7 +81,7 @@ def constVelocity(dx, x, x0=[0,0], velConst = 0.4, distSlow=0.01):
     return dx
 
 
-def constVel(xd, const_vel=0.3):
+def constVel(xd, const_vel=1.0):
     xd_norm = np.sqrt(np.sum(xd**2))
     if xd_norm==0: return xd
     return xd/xd_norm*const_vel

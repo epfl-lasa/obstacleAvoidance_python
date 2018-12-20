@@ -1049,8 +1049,6 @@ if simuCase == 13:
 
     animationName = 'ani/avoiding_ellipse.mp4'
 
-
-
 # saveFigure
 if True:
 # if saveFigure:

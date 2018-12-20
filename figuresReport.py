@@ -47,7 +47,7 @@ def pltLines(pos0, pos1, xlim=[-100,100], ylim=[-100,100]):
     
     plt.plot(xlim, ylim, '--', color=[0.3,0.3,0.3], linewidth=2)
 
-options = [7]
+options = [9]
 for option in options:
     if option==-1:
 
@@ -423,7 +423,7 @@ for option in options:
 
         xlim = [-0.1,4]
         ylim = [-2,2]
-
+ 
         ### Three obstacles touching - convergence
         xAttractor = np.array([0,0])
         
@@ -442,3 +442,82 @@ for option in options:
         obs[0].tail_effect = True
 
         Simulation_vectorFields(xlim, ylim, N_resol, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='ellipse_tailEffectOn', obs_avoidance_func=obs_avoidance_interpolation_moving, showLabel=False)
+
+    if option==8:
+        figSize = (14,12)
+        N_resol = 120
+        saveFigures=True
+
+        xlim = [-10,10]
+        ylim = [-8,8]
+
+        xAttractor = np.array([0,0])
+        centr = [2, 2.5]
+
+        obs = []
+        N_obs = 12
+        R = 5
+        th_r0 = 38/180*pi
+        rCent=2.4
+        for n in range(N_obs):
+            obs.append(Obstacle(
+                a = [0.4,3],
+                p = [1,1],
+                x0 = [R*cos(2*pi/N_obs*n), R*sin(2*pi/N_obs*n)],
+                th_r = th_r0 + 2*pi/N_obs*n,
+                sf = 1.0,
+                tail_effect=False))
+
+            obs[n].center_dyn=[obs[n].x0[0]-rCent*sin(obs[n].th_r),
+                               obs[n].x0[1]+rCent*cos(obs[n].th_r)]
+
+        Simulation_vectorFields(xlim, ylim, N_resol, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='ellipseCircle_tailEffectOff', obs_avoidance_func=obs_avoidance_interpolation_moving, showLabel=False, figureSize=figSize)
+        
+        for n in range(N_obs):
+            obs[n].tail_effect = True
+            
+        Simulation_vectorFields(xlim, ylim, N_resol, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='ellipseCircle_tailEffectOn', obs_avoidance_func=obs_avoidance_interpolation_moving, showLabel=False, figureSize=figSize)
+
+    if option==9:
+        # figSize = (12,8)
+        figSize = (5*2.5,3*2)
+        N_resol = 140
+        saveFigures=True
+
+        xlim = [1,11]
+        ylim = [1,7]
+
+        xAttractor = np.array([2,1.5])
+
+        obs = []
+        N_obs = 8
+
+        x0_list = [[2.95,6],
+                   # [4.3, 2.2],
+                   [4.3, 2.7],
+                   [4.35, 4.3],
+                   [6.9, 1.6],
+                   # [6.5, 3.95],
+                   [7.0, 3.95],
+                   [6.8, 6.2],
+                   [8.5, 3.5],
+                   [9.0, 6.25]
+        ]
+
+        for n in range(len(x0_list)):
+            
+            obs.append(Obstacle(
+                # a = [0.95,0.95],
+                a = [0.5,0.5],
+                p = [1,1],
+                x0 = x0_list[n],
+                th_r = 0,
+                sf = 2.0))
+            
+        Simulation_vectorFields(xlim, ylim, N_resol, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='wheelchairSimulation', obs_avoidance_func=obs_avoidance_interpolation_moving, showLabel=False, figureSize=figSize)
+
+
+
+
+
+
