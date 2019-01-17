@@ -243,7 +243,7 @@ plt.grid(False)
 #plt.quiver(XX, YY, e_arr[0,:,:], e_arr[1,:,:], color=[.0, 0.9, 0])           
 
 #ax.quiver(XX, YY, xd[0,:,:], xd[1,:,:])
-ax.streamplot(XX, YY, xd[0,:,:], xd[1,:,:], color=[0,0,0.5])
+ax.streamplot(XX, YY, xd[0,:,:], xd[1,:,:], color=[0,0,0.7])
 #velMag = np.linalg.norm(np.dstack((xd[0,:,:], xd[1,:,:])), axis=2 )/6*100
 #strm = res_ifd = ax.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=velMag, cmap='winter', norm=matplotlib.colors.Normalize(vmin=0, vmax=10.) )
 
@@ -269,7 +269,16 @@ figName = 'flowAround_multiConcave_nonlinear'
 
 plt.tick_params(axis='both', which='major',bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
 
+if saveFig:
+    plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + figName + '.eps', bbox_inches='tight')
 
+# Initial system
+fig, ax = plt.subplots(figsize=(7,6))
+ax.streamplot(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color=[0,0,0.7])
+plt.axis('equal')
+plt.grid(False)
+plt.tick_params(axis='both', which='major',bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
+figName = 'flowAround_multiConcave_nonlinear_initial'
 if saveFig:
     plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + figName + '.eps', bbox_inches='tight')
 

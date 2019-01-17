@@ -79,7 +79,7 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
                 xd_IFD[:,ix,iy] = obs_avoidance_func(np.array([XX[ix,iy],YY[ix,iy]]), dynamicalSystem, obs, attractor=xAttractor)
             else:
                 pos = np.array([XX[ix,iy],YY[ix,iy]])
-                xd_init[:,ix,iy] = dynamicalSystem(pos, x0 = xAttractor ) # initial DS
+                xd_init[:,ix,iy] = dynamicalSystem(pos, x0=xAttractor) # initial DS
                 #xd_init[:,ix,iy] = constVelocity(xd_init[:,ix,iy], pos)
                 xd_IFD[:,ix,iy] = obs_avoidance(pos, xd_init[:,ix,iy], obs) # modulataed DS with IFD
                 #xd_IFD[:,ix,iy] = constVelocity(xd_IFD[:,ix,iy], pos)

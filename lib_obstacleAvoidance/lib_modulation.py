@@ -797,7 +797,6 @@ def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
 
         N_attr = attractor.shape[1]
             
-
     # Linear and angular roation of velocity
     xd_dx_obs = np.zeros((d,N_obs))
     xd_w_obs = np.zeros((d,N_obs)) #velocity due to the rotation of the obstacle
@@ -822,6 +821,7 @@ def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
         
         E[:,:,n], Gamma[n], E_orth[:,:,n] = compute_basis_matrix( d,x_t[:,n],obs[n], R[:,:,n])
 
+    Gamma_a = []
     for a in range(N_attr):
         # Eucledian distance -- other options possible
         Gamma_a = LA.norm(x-attractor[:,a])
@@ -858,7 +858,6 @@ def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
 
         # Move x_hat to original coordinate system
         #x_hat = R[:,:,n].T*x_hat + obs[o].x0;
-#    import pdb; pdb.set_trace() ## DEBUG ##
     
     xd = ds_init(x+delta_x)
 
@@ -925,7 +924,7 @@ def obs_avoidance_nonlinear_radial(x, ds_init, obs, attractor='none'):
             D = w[n]*(np.hstack((-1,d0))/abs(Gamma[n])**(1/rho))
         #     if isfield(obs[n],'tailEffect') && ~obs[n].tailEffect && xdT*R(:,:,n)*E(:,1,n)>=0 #the obstacle is already passed, no need to do anything
         #         D(1) = 0.0
-        if (not obs[n].tailEffect) and D[0] < -1.0:
+        if (not obs[n].tail_effect) and D[0] < -1.0:
             D[1:] = d0
             if xd.T @ R[:,:,n] @ E[:,1,n] < 0:
                 D[0] = -1.0

@@ -29,6 +29,7 @@ plt.close('all')
 obstacleShape = 'ellipse'
 
 saveFig=True
+fileType = 'png'
 
 # ds_init = linearDS_constVel
 ds_init = nonlinear_wavy_DS
@@ -133,7 +134,8 @@ def obs_avoidance_nonlinear_radialDisplacement(rel_pos, xd, x_ref, Gamma, rad0, 
                     l0 = (Gamma[ix,iy]**2-1)/Gamma[ix,iy]**2
                     l1 = Gamma[ix,iy]/(Gamma[ix,iy]-1)
 
-                    normL = LA.norm([l0,l1])
+                    normL = LA.norm([
+                        l0,l1])
 
                     l0 = l0/normL
                     l1 = l1/normL
@@ -201,7 +203,6 @@ def evaluate_distanceFunction(pos, x_ref, rFunc):
     
     rel_pos = (pos - np.tile(np.reshape(x_ref, (dim,1,1)), (1,n_resol,n_resol) ) )
     phi = np.arctan2(rel_pos[1,:,:], rel_pos[0,:,:])
-
     rad = LA.norm(rel_pos, axis=0)
 
     rad0 = rFunc(phi)
@@ -309,8 +310,7 @@ plt.tick_params(axis='both', which='major',bottom=False, top=False, left=False, 
 
 figName = 'radialDisplacement_visualization_initial'
 if saveFig:
-    plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + figName + '.eps', bbox_inches='tight')
-
+    plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + figName + '.'+fileType, bbox_inches='tight')
 
 #plt.figure()
 #poly = np.vstack((xVals, yVals)).T
@@ -346,4 +346,4 @@ plt.tick_params(axis='both', which='major',bottom=False, top=False, left=False, 
 
 figName = 'radialDisplacement_visualization_modulated'
 if saveFig:
-    plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + figName + '.eps', bbox_inches='tight')
+    plt.savefig('/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/fig/' + figName + '.'+fileType, bbox_inches='tight')

@@ -18,7 +18,6 @@ from math import pi
 #os.chdir(scriptPath)
 
 import sys
- 
 
 lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
 if not any (lib_string in s for s in sys.path):
@@ -28,15 +27,14 @@ lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/"
 if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 
-from simulationVectorFields import *
 # Custom libraries
+from simulationVectorFields import *
 from dynamicalSystem_lib import *
 
-saveFigures=False
+saveFigures=True
 
+options=[5]
 
-options=[3
-]
 for option in options:
     if option==-1:
         theta = 0*pi/180
@@ -173,6 +171,9 @@ for option in options:
 
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_multipleObstacles', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
 
+        obs = []
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_multipleObstacles_initial', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
+
 
     if option==4:
         xlim = [0.3,13]
@@ -202,4 +203,27 @@ for option in options:
         obs[-1].center_dyn = np.array([ 3.87541829,  0.89312174])
         
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_intersectingObstacles', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
+
+        obs = []
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_intersectingObstacles_initial', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
         
+    if option==5:
+        xlim = [-3,10]
+        ylim = [-6,6]
+
+        xAttractor=[0,0]
+
+        N_points=110
+
+        obs=[]
+        # Obstacle 2
+        a = [2.0, 3.5]
+        p = [1,1]
+        x0 = [5.3, -.4]
+        th_r = -30/180*pi
+        sf = 1
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
+
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_convergence', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_wavy_DS, nonlinear=True)
+
+        # Simulation_vectorFields(xlim, ylim, N_points, obs, saveFigure=saveFigures, figName='nonlinear_convergence_none', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_wavy_DS, nonlinear=True)
