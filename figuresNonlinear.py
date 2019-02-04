@@ -28,12 +28,13 @@ if not any (lib_string in s for s in sys.path):
     sys.path.append(lib_string)
 
 # Custom libraries
-from simulationVectorFields import *
+# from simulationVectorFields import *
+from vectorField_visualization import *
 from dynamicalSystem_lib import *
+# from nonlinear_modulations import *
 
 saveFigures=True
-
-options=[5]
+options=[6]
 
 for option in options:
     if option==-1:
@@ -227,3 +228,51 @@ for option in options:
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_convergence', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_wavy_DS, nonlinear=True)
 
         # Simulation_vectorFields(xlim, ylim, N_points, obs, saveFigure=saveFigures, figName='nonlinear_convergence_none', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_wavy_DS, nonlinear=True)
+    if option==6:
+        xlim = [0.3,13]
+        ylim = [-6,6]
+
+        xAttractor=[0,0]
+
+        N_points=10
+        #saveFigures=True
+
+        obs=[]
+        
+        a = [1.0,1.0]
+        p = [1,1]
+        x0 = [5.5,1]
+        th_r = 20/180*pi
+        sf = 1
+        hirarchy=0
+        parent = 'root'
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
+
+        a = [3,0.8]
+        p = [1,1]
+        x0 = [8,3]
+        th_r = 30/180*pi
+        sf = 1
+        hirarchy=1
+        parent = obs[0]
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
+
+        a = [0.4,2.2]
+        p = [1,1]
+        x0 = [7, 0]
+        th_r = 80/180*pi
+        sf = 1
+        hirarchy=1
+        parent = obs[0]
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
+
+        a = [0.4,2.2]
+        p = [1,1]
+        x0 = [8,-2]
+        th_r = 20/180*pi
+        sf = 1
+        hirarchy=2
+        parent = obs[-1]
+        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
+
+        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_treeOfStars', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_hirarchy, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)

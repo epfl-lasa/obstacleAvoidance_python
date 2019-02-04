@@ -1,5 +1,4 @@
 # coding: utf-8
-
 '''
 Obstacle Avoidance Algorithm script with vecotr field
 
@@ -52,7 +51,9 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
         obs[n].draw_ellipsoid(numPoints=50) # 50 points resolution 
 
     # Adjust dynamic center 
-    intersection_obs = obs_common_section(obs) 
+    intersection_obs = obs_common_section(obs)
+    intersection_obs = obs_common_section_hirarchy(obs) 
+
     #print('intersection_obs', intersection_obs) 
     #dynamic_center_3d(obs, intersection_obs) 
 

@@ -252,7 +252,7 @@ for ii in range (0,4):
     #     caxis(2*[-1,1]) # set axis range
     #     measureName = "denominator"
 
-    figs[ii].canvas.set_window_title("Figure - " + measureName)
+    figs[ii].canvas.set_window_title("Figure - " + measureName)o
     cbar = plt.colorbar()
     cbar.set_ticks([colTicks[0], 0, colTicks[-1]])
     cbar.set_ticklabels([colTicks[0], 0, colTicks[-1]])
