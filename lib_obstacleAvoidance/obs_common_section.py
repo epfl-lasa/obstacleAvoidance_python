@@ -332,43 +332,37 @@ def obs_common_section_hirarchy(obs, hirarchy=True, N_points=30, Gamma_steps=5):
     while intersecting_obstacles.shape[0]:
         ii = intersecting_obstacles[0]
         intersection_clusters.append([ii])
-        print('ii', ii)
-
+        
         children = np.arange(N_obs)[intersection_matrix_triangle[:,ii]]
 
         while children.shape[0]>0:
-        # while interesection_children.shape[0]:
             circle_object = 0
             
             if np.sum([children[0] in intersection_clusters[kk] for kk in range(len(intersection_clusters))]):
                 warnings.warn('Object-circle has been detected.')
             
-            # print('cluster',intersection_clusters)
-
             if not children[0] in intersection_clusters[-1]:
                 intersection_clusters[-1].append(children[0])
 
-            # print('obstacles', intersecting_obstacles)
-            # print('children', children)
-            
             if children[0] in intersecting_obstacles:
                 
                 ind_equal = np.arange(len(intersecting_obstacles))[intersecting_obstacles==children[0]]
                 children = np.hstack((children, np.arange(N_obs)[intersection_matrix_triangle[:,children[0]]]))
-                # print('child 3', children)
+
                 intersecting_obstacles = np.delete(intersecting_obstacles,ind_equal[0])
-                # print('do it')
 
                 if ind_equal.shape[0]>1:
                     warnings.warn('SHAPE not equal')
                     
             children = np.delete(children, 0)
         intersecting_obstacles = np.delete(intersecting_obstacles, 0)
+
+    # All (close) relatives of one object
     intersection_relatives = intersection_matrix_triangle + intersection_matrix_triangle.T
 
-    # print('line 348')
     # Choose center
     geometric_center = np.zeros(dim)
+
     
     for ii in range(len(intersection_clusters)): # list of cluster-lists
         total_weight = 0
@@ -379,29 +373,30 @@ def obs_common_section_hirarchy(obs, hirarchy=True, N_points=30, Gamma_steps=5):
             total_weight += R_max[jj]
         geometric_center /= total_weight
 
-        center_distance = [LA.norm(np.tile(geometric_center, (1,len(intersection_clusters[ii]))) - np.array(obs[jj].x0)) for jj in range(len(intersection_clusters[ii]))]
+        center_distance = [LA.norm(geometric_center - np.array(obs[kk].x0)) for kk in range(len(intersection_clusters[ii]))]
 
         # Center obstacle // root_index
         root_index = np.arange(N_obs)[intersection_clusters[ii]][np.argmin(center_distance)]
                 
         obs[root_index].hirarchy = 0
-        obs[root_index].center_dyn = obs[children[0]].x0
-        # it_hirarchy = 0
+        obs[root_index].center_dyn = obs[root_index].x0
 
         obstacle_tree = [root_index]
 
         # For all elements in one cluster
         while len(obstacle_tree):
-            
+
             # Iterate over all children
-            for ii in intersection_relatives[:,obstacle_tree[0]]:
-                if ii!=obstacle_tree[0]:
-                    obs[ii].hirarchy = obs[obstacle_tree[0]].hirarchy+1
-                    obs[ii].center_dyn = Inersections.get(ii, obstacle_tree[0])
-                    obstacle_tree.append(ii)
+            for jj in np.arange(N_obs)[intersection_relatives[:,obstacle_tree[0]]]:
+                if jj!=obstacle_tree[0]:
+                    obs[jj].hirarchy = obs[obstacle_tree[0]].hirarchy+1
+                    obs[jj].center_dyn = Intersections.get(jj, obstacle_tree[0])
+                    # intersection_relatives[jj, obstacle_tree[0]] = False
+                    intersection_relatives[obstacle_tree[0], jj] = False
+                    obstacle_tree.append(jj)
             
             del obstacle_tree[0]
-            
+    
         # for jj in intersection_clusters[ii]:
             # center_distance[jj] = 
     

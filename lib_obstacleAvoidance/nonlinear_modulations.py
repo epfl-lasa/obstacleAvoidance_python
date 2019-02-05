@@ -1,4 +1,3 @@
-
 '''
 Obstacle Avoidance Library with different options
 
@@ -502,6 +501,7 @@ def obs_avoidance_nonlinear_hirarchy(x, ds_init, obs, attractor='none'):
 
     xd = xd + xd_obs # transforming back the velocity into the global coordinate system
 
+    # print('xd', xd)
     #if  (str(float(pxd[0] )).lower() == 'nan' or
     #     str(float(xd[1] )).lower() == 'nan'):
     assert(not( str(float(xd[0] )).lower() == 'nan'))

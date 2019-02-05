@@ -234,12 +234,12 @@ for option in options:
 
         xAttractor=[0,0]
 
-        N_points=10
+        N_points=20
         #saveFigures=True
 
         obs=[]
         
-        a = [1.0,1.0]
+        a = [2.0,2.0]
         p = [1,1]
         x0 = [5.5,1]
         th_r = 20/180*pi
@@ -255,7 +255,7 @@ for option in options:
         sf = 1
         hirarchy=1
         parent = obs[0]
-        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
+        # obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
 
         a = [0.4,2.2]
         p = [1,1]
@@ -264,7 +264,7 @@ for option in options:
         sf = 1
         hirarchy=1
         parent = obs[0]
-        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
+        # obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
 
         a = [0.4,2.2]
         p = [1,1]
@@ -273,6 +273,6 @@ for option in options:
         sf = 1
         hirarchy=2
         parent = obs[-1]
-        obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
+        # obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
 
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_treeOfStars', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_hirarchy, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)

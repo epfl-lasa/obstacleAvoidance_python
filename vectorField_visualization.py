@@ -37,9 +37,7 @@ from lib_modulation import *
 from obs_common_section import *
 from obs_dynamic_center_3d import *
 
-
-
-def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, obs=[], sysDyn_init=False, xAttractor = np.array(([0,0])), saveFigure = False, figName='default', noTicks=True, showLabel=True, figureSize=(7.,6), obs_avoidance_func=obs_avoidance_convergence, attractingRegion=False, drawVelArrow=False, colorCode=False, streamColor=[0.05,0.05,0.7], obstacleColor=[], plotObstacle=True, plotStream=True, figHandle=[], alphaVal=1, dynamicalSystem=linearAttractor, nonlinear=False):
+def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, obs=[], sysDyn_init=False, xAttractor = np.array(([0,0])), saveFigure = False, figName='default', noTicks=True, showLabel=True, figureSize=(7.,6), obs_avoidance_func=obs_avoidance_convergence, attractingRegion=False, drawVelArrow=False, colorCode=False, streamColor=[0.05,0.05,0.7], obstacleColor=[], plotObstacle=True, plotStream=True, figHandle=[], alphaVal=1, dynamicalSystem=linearAttractor, nonlinear=False, hirarchyLabel=True):
     #fig_ifd, ax_ifd = plt.subplots(figsize=(10,8)) 
     if len(figHandle): 
         fig_ifd, ax_ifd = figHandle[0], figHandle[1] 
@@ -51,10 +49,11 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
         obs[n].draw_ellipsoid(numPoints=50) # 50 points resolution 
 
     # Adjust dynamic center 
-    intersection_obs = obs_common_section(obs)
-    intersection_obs = obs_common_section_hirarchy(obs) 
+    if nonlinear:
+        intersection_obs = obs_common_section_hirarchy(obs)
+    else:
+      intersection_obs = obs_common_section(obs)  
 
-    #print('intersection_obs', intersection_obs) 
     #dynamic_center_3d(obs, intersection_obs) 
 
     # Create meshrgrid of points
@@ -73,23 +72,23 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
         
     # Initialize array
     xd_init = np.zeros((2,N_x,N_y))    
-    xd_IFD  = np.zeros((2,N_x,N_y))
+    xd_mod  = np.zeros((2,N_x,N_y))
     for ix in range(N_x):
         for iy in range(N_y):
             if nonlinear:
-                xd_IFD[:,ix,iy] = obs_avoidance_func(np.array([XX[ix,iy],YY[ix,iy]]), dynamicalSystem, obs, attractor=xAttractor)
+                xd_mod[:,ix,iy] = obs_avoidance_func(np.array([XX[ix,iy],YY[ix,iy]]), dynamicalSystem, obs, attractor=xAttractor)
+                # xd_mod[:,ix,iy] = xd_init[:,ix,iy]
             else:
                 pos = np.array([XX[ix,iy],YY[ix,iy]])
                 xd_init[:,ix,iy] = dynamicalSystem(pos, x0=xAttractor) # initial DS
                 #xd_init[:,ix,iy] = constVelocity(xd_init[:,ix,iy], pos)
-                xd_IFD[:,ix,iy] = obs_avoidance(pos, xd_init[:,ix,iy], obs) # modulataed DS with IFD
-                #xd_IFD[:,ix,iy] = constVelocity(xd_IFD[:,ix,iy], pos)
+                xd_mod[:,ix,iy] = obs_avoidance(pos, xd_init[:,ix,iy], obs) # modulataed DS with IFD
+                #xd_mod[:,ix,iy] = constVelocity(xd_mod[:,ix,iy], pos)
     
     if sysDyn_init:
         #fig_init, ax_init = plt.subplots(figsize=(10,8))
         fig_init, ax_init = plt.subplots(figsize=(5,2.5))
         res_init = ax_init.streamplot(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color=[(0.3,0.3,0.3)])
-        #res_init = ax_init.quiver(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color=[(0.3,0.3,0.3)])
         #res_init = ax_init.quiver(XX, YY, xd_init[0,:,:], xd_init[1,:,:], color=[(0.3,0.3,0.3)])
         
         ax_init.plot(xAttractor[0],xAttractor[1], 'k*')
@@ -103,8 +102,8 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
         
     collisions = obs_check_collision_2d(obs, XX, YY)
     
-    dx1_noColl = np.squeeze(xd_IFD[0,:,:]) * collisions
-    dx2_noColl = np.squeeze(xd_IFD[1,:,:]) * collisions
+    dx1_noColl = np.squeeze(xd_mod[0,:,:]) * collisions
+    dx2_noColl = np.squeeze(xd_mod[1,:,:]) * collisions
 
     if plotStream:
         if colorCode:
@@ -114,7 +113,8 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
             #fig_cc = plt.figure()
             #fig_cc.colorbar(strm.lines)
         else:
-            res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=streamColor)
+            # res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=streamColor)
+            res_ifd = ax_ifd.quiver(XX, YY,dx1_noColl, dx2_noColl, color=streamColor)
             #res_ifd.set_alpha(alphaVal)
         #res_ifd = ax_ifd.streamplot(XX, YY,dx1_noColl, dx2_noColl, color=[29./255,29./255,199./255])
         #res_ifd = ax_ifd.vectorfield(XX, YY,dx1_noColl, dx2_noColl, color=[0.5,0.5,0.5])
@@ -157,6 +157,9 @@ def Simulation_vectorFields(x_range=[0,10],y_range=[0,10], resolutionField=10, o
             ax_ifd.plot(obs[n].x0[0],obs[n].x0[1],'k.')
             if hasattr(obs[n], 'center_dyn'):# automatic adaptation of center 
                 ax_ifd.plot(obs[n].center_dyn[0],obs[n].center_dyn[1], 'k+', linewidth=18, markeredgewidth=4, markersize=13)
+                # ax.annotate('(%s, %s)' % xy, xy=xy, textcoords='data')
+                dx = 0.1
+                ax_ifd.annotate('{}'.format(obs[n].hirarchy), xy=np.array(obs[n].x0)+0.08, textcoords='data', size=16, weight="bold")
 
             if drawVelArrow and np.linalg.norm(obs[n].xd)>0:
                 col=[0.5,0,0.9]
