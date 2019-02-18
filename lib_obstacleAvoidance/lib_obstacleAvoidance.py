@@ -46,15 +46,13 @@ def compute_weights(distMeas, N=0, distMeas_min=1, weightType='inverseGamma'):
     #UNTITLED5 Summary of this function goes here
     #   Detailed explanation goes here
 
-    #import pdb; pdb.set_trace() ## DEBUG ##
+    distMeas = np.array(distMeas)
     if N==0:
         N = len(distMeas)
     distMeas = np.array([max(distMeas[i]-distMeas_min,0) for i in range(N)])
 
     w = np.zeros(([1,N]))
 
-    #Gamma(Gamma<1) = 1
-    #Gamma = Gamma-1
     if weightType == 'inverseGamma':
         zeroInd = distMeas==0
         if np.sum(zeroInd): # one element equal to zero -- avoid null division

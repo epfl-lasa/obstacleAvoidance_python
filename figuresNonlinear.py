@@ -6,7 +6,6 @@ Obstacle Avoidance Algorithm script with vecotr field
 @date 2018-02-15
 '''
 
-
 # Command to automatically reload libraries -- in ipython before exectureion
 import numpy as np
 import matplotlib.pyplot as plt
@@ -211,10 +210,10 @@ for option in options:
     if option==5:
         xlim = [-3,10]
         ylim = [-6,6]
-
+        
         xAttractor=[0,0]
 
-        N_points=110
+        N_points=10
 
         obs=[]
         # Obstacle 2
@@ -225,16 +224,19 @@ for option in options:
         sf = 1
         obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf))
 
-        Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_convergence', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_wavy_DS, nonlinear=True)
+        Simulation_vectorFields(xlism, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_convergence', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_wavy_DS, nonlinear=True)
 
         # Simulation_vectorFields(xlim, ylim, N_points, obs, saveFigure=saveFigures, figName='nonlinear_convergence_none', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_wavy_DS, nonlinear=True)
     if option==6:
         xlim = [0.3,13]
         ylim = [-6,6]
+        
+        xlim = [2,10]
+        ylim = [-4,4]
 
         xAttractor=[0,0]
 
-        N_points=20
+        N_points=6
         #saveFigures=True
 
         obs=[]
@@ -248,31 +250,53 @@ for option in options:
         parent = 'root'
         obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
 
-        a = [3,0.8]
-        p = [1,1]
-        x0 = [8,3]
-        th_r = 30/180*pi
-        sf = 1
+        axes = [3,0.8]
+        roundness = [1,1]
+        center = [8,3]
+        orientation = 30/180*pi
+        margin = 1
         hirarchy=1
         parent = obs[0]
-        # obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
+        # obs.append(Obstacle(a=axes, p=roundness, x0=center,th_r=orientation, sf=margin, hirarchy=hirarchy, parent=parent))
 
-        a = [0.4,2.2]
+        a = [0.4,1.8]
         p = [1,1]
-        x0 = [7, 0]
+        x0 = [5, -3.5]
         th_r = 80/180*pi
         sf = 1
         hirarchy=1
         parent = obs[0]
         # obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
 
-        a = [0.4,2.2]
+        a = [0.8,2.2]
         p = [1,1]
-        x0 = [8,-2]
-        th_r = 20/180*pi
+        x0 = [5,-2]
+        th_r = -40/180*pi
         sf = 1
         hirarchy=2
         parent = obs[-1]
         # obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
 
+        # a = [0.4,2.2]
+        # p = [1,1]
+        # x0 = [10, 0]
+        # th_r = 80/180*pi
+        # sf = 1
+        # hirarchy=0
+        # parent = obs[0]
+        # obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
+
+        # a = [0.4,2.2]
+        # p = [1,1]
+        # x0 = [10,-2]
+        # th_r = 20/180*pi
+        # sf = 1
+        # hirarchy=0
+        # parent = obs[-1]
+        # obs.append(Obstacle(a=a, p=p, x0=x0,th_r=th_r, sf=sf, hirarchy=hirarchy, parent=parent))
+
+
         Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_treeOfStars', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_hirarchy, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
+        # Simulation_vectorFields(xlim, ylim, N_points, obs, xAttractor=xAttractor, saveFigure=saveFigures, figName='nonlinear_treeOfStars', noTicks=True, obs_avoidance_func=obs_avoidance_nonlinear_radial, dynamicalSystem=nonlinear_stable_DS, nonlinear=True)
+
+

@@ -15,13 +15,15 @@ class Obstacle: # Obstacle
         if type(rad_func)==str and rad_func=='default':
             rad_func = ellipse
         # Leave at the moment for backwards compatibility
-        self.a = a
+        self.a = a # TODO remove
+        self.axes = a
         self.p = p
-            
-        # Obstacle Counter
-        self.x0 = x0
-        self.th_r = th_r
         self.sf = sf
+            
+        # Obstacle attitude
+        self.x0 = x0 # TODO remove
+        self.center = x0
+        self.th_r = th_r
 
         # Trees of stars -- hirarchy
         self.hirarchy = hirarchy
@@ -31,7 +33,6 @@ class Obstacle: # Obstacle
         # Important point for trees of stars
         self.saddle_entr = 0
         self.saddle_exit = 0
-    
         
         self.sigma = sigma
         self.tail_effect = tail_effect # Modulation if moving away behind obstacle
@@ -61,8 +62,9 @@ class Obstacle: # Obstacle
             self.x_end = 0
             
         self.w = w # Rotational velocity
-        self.xd = xd # 
-           
+        self.xd = xd #
+
+    # def update_reference(self, new_ref):
     
     def update_pos(self, t, dt):
         # TODO - implement function dependend movement (yield), nonlinear integration

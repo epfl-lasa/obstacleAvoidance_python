@@ -9,20 +9,18 @@ Obstacle Avoidance Library with different options
 
 import numpy as np
 import numpy.linalg as LA
+from numpy import pi
 
-import sys 
-lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/lib_obstacleAvoidance/"
-if not any (lib_string in s for s in sys.path):
-    sys.path.append(lib_string)
-
-lib_string = "/home/lukas/Code/MachineLearning/ObstacleAvoidanceAlgroithm/"
-if not any (lib_string in s for s in sys.path):
-    sys.path.append(lib_string)
+import sys
+relative_paths = ["lib_obstacleAvoidance/"]
+for ii in len(relative paths):
+    if not any (relative paths[ii] in s for s in sys.path):
+        sys.path.append(relative paths[ii])
     
 from lib_obstacleAvoidance import *
 from dynamicalSystem_lib import *
 
-# Only import needed function
+# TODO: Only import needed function
 from linear_modulations import *
 from nonlinear_modulations import *
 
@@ -31,9 +29,84 @@ import warnings
 def getGammmaValue_ellipsoid(ob, x_t):
     return np.sum( (x_t/np.tile(ob.a, (x_t.shape[1],1)).T) **(2*np.tile(ob.p, (x_t.shape[1],1) ).T ), axis=0)
 
+def get_radius_ellipsoid(x_t, a=[], ob=[]):
+    # Derivation:
+    # x^2/a^2 + y^2/b^2 = 1
+    # x^2/a^2 + (x*r_y)^2/b^2 = 1
+    # x = sqrt(1/(1/a^2+r^2/b^2))
+    # r = x sqrt(1+r_y^2)
+    
+    if not np.array(a).shape[0]:
+        a = ob.a
+
+    if x_t[0]:
+        rat_x1_x2 = x_t[1]/x_t[0]
+        x_1_val = np.sqrt(1./(1./a[0]**2+1.*rat_x1_x2**2/a[1]**2))
+        return x_1_val*np.sqrt(1+rat_x1_x2**2)
+    else:
+        return a[1]
+    
+    
+def get_radius(vec_ref2point, vec_cent2ref=[], a=[], obs=[]):
+    dim = 2 # TODO higher dimensions
+
+    if not np.array(vec_cent2ref).shape[0]:
+        vec_cent2ref = np.array(obs.center_dyn) - np.array(obs.x0)
+        
+    if not np.array(a).shape[0]:
+        a = obs.a
+        
+    if not LA.norm(vec_cent2ref): # center = ref
+        return get_radius_ellipsoid(vec_ref2point, a)
+    
+    dir_surf_cone = np.zeros((dim, 2))
+    rad_surf_cone = np.zeros((2))
+
+    if np.cross(vec_ref2point, vec_cent2ref) > 0:
+        dir_surf_cone[:, 0] = vec_cent2ref
+        rad_surf_cone[0] = get_radius_ellipsoid(dir_surf_cone[:, 0], a)-LA.norm(vec_cent2ref)
+        
+        dir_surf_cone[:, 1] = -1*np.array(vec_cent2ref)
+        rad_surf_cone[1] = get_radius_ellipsoid(dir_surf_cone[:, 1], a)+LA.norm(vec_cent2ref)
+ 
+    else:
+        dir_surf_cone[:, 0] = -1*np.array(vec_cent2ref)
+        rad_surf_cone[0] = get_radius_ellipsoid(dir_surf_cone[:, 0], a)+LA.norm(vec_cent2ref)
+        
+        dir_surf_cone[:, 1] = vec_cent2ref
+        rad_surf_cone[1] = get_radius_ellipsoid(dir_surf_cone[:, 1], a)-LA.norm(vec_cent2ref)
+    
+    ang_tot = pi/2
+    for ii in range(12): # n_iter
+        rotMat = np.array([[np.cos(ang_tot), np.sin(ang_tot)],
+                           [-np.sin(ang_tot), np.cos(ang_tot)]])
+
+        vec_ref2dir = rotMat @ dir_surf_cone[:, 0]
+        
+        vec_ref2dir /= LA.norm(vec_ref2dir) # nonzero value expected
+        
+        rad_ref2 = get_radius_ellipsoid(vec_ref2dir, a)
+        vec_ref2surf = rad_ref2*vec_ref2dir - vec_cent2ref
+
+        if np.cross(vec_ref2surf, vec_ref2point)==0: # how likely is this lucky guess? 
+            return LA.norm(vec_ref2surf)
+        elif np.cross(vec_ref2surf, vec_ref2point) < 0:
+            dir_surf_cone[:, 0] = vec_ref2dir
+            rad_surf_cone[0] = LA.norm(vec_ref2surf)
+        else:
+            dir_surf_cone[:, 1] = vec_ref2dir
+            rad_surf_cone[1] = LA.norm(vec_ref2surf)
+
+        ang_tot /= 2.0
+    return np.mean(rad_surf_cone)
+    
+
 def findRadius(ob, direction, a = [], repetition = 6, steps = 10):
+    # NOT SURE IF USEFULL -- NORMALLY x = Gamma*Rad
+    # TODO check
     if not len(a):
         a = [np.min(ob.a), np.max(ob.a)]
+        # a = obs.a
         
     # repetition
     for ii in range(repetition):
@@ -53,32 +126,32 @@ def findRadius(ob, direction, a = [], repetition = 6, steps = 10):
             posBoundary+=1
 
         a[1] = magnitudeDir[posBoundary]
+        
     return (a[0]+a[1])/2.0
 
 
-
-def findRadius(ob, direction, a = [], repetition = 6, steps = 10):
-    if not len(a):
-        a = [np.min(ob.a), np.max(ob.a)]
+# def findRadius(ob, direction, a = [], repetition = 6, steps = 10):
+#     if not len(a):
+#         a = [np.min(ob.a), np.max(ob.a)]
         
-    # repetition
-    for ii in range(repetition):
-        if a[0] == a[1]:
-            return a[0]
+#     # repetition
+#     for ii in range(repetition):
+#         if a[0] == a[1]:
+#             return a[0]
         
-        magnitudeDir = np.linspace(a[0], a[1], num=steps)
-        Gamma = getGammmaValue_ellipsoid(ob, np.tile(direction, (steps,1)).T*np.tile(magnitudeDir, (np.array(ob.x0).shape[0],1)) )
-        if np.sum(Gamma==1):
-            return magnitudeDir[np.where(Gamma==1)]
-        posBoundary = np.where(Gamma<1)[0][-1]
+#         magnitudeDir = np.linspace(a[0], a[1], num=steps)
+#         Gamma = getGammmaValue_ellipsoid(ob, np.tile(direction, (steps,1)).T*np.tile(magnitudeDir, (np.array(ob.x0).shape[0],1)) )
+#         if np.sum(Gamma==1):
+#             return magnitudeDir[np.where(Gamma==1)]
+#         posBoundary = np.where(Gamma<1)[0][-1]
 
-        a[0] = magnitudeDir[posBoundary]
-        posBoundary +=1
-        while Gamma[posBoundary]<=1:
-            posBoundary+=1
+#         a[0] = magnitudeDir[posBoundary]
+#         posBoundary +=1
+#         while Gamma[posBoundary]<=1:
+#             posBoundary+=1
 
-        a[1] = magnitudeDir[posBoundary]
-    return (a[0]+a[1])/2.0
+#         a[1] = magnitudeDir[posBoundary]
+#     return (a[0]+a[1])/2.0
 
 
 
@@ -254,4 +327,4 @@ def orthogonalBasisMatrix(v):
 
 #def constVel_pos(xd, x, x_attr, kFact=0.3, v_max=1):
 #    velFactor = np.min(kFact*np.linalg.norm(x-x_attr), v_max)
-#    return xd /np.linalg.norm(xd)*velFactor
+#    Return xd /np.linalg.norm(xd)*velFactor

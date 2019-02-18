@@ -13,22 +13,29 @@ import matplotlib.pyplot as plt # for debugging
 import warnings
 
 class Intersection_matrix():
-    # Matrix uses less space this way
+    # Matrix uses less space this way this is useful with many obstacles! e.g. dense crowds
     # Symmetric matrix with zero as diagonal values
     def __init__(self, n_obs, dim=2):
-        # self._intersection = [False for ii in range(int((n_obs-1)*n_obs/2))]
-        # self._intersection_list = np.zeros(int((n_obs-1)*n_obs/2), dtype=bool)
         self._intersection_list = [False for ii in range(int((n_obs-1)*n_obs/2))]
         self._dim = n_obs-1
 
     def set(self, row, col, value):
         ind = self.get_index(row,col)
         self._intersection_list[ind] = value
-        
 
     def get(self, row, col):
         ind = self.get_index(row,col)
         return self._intersection_list[ind]
+
+    def get_intersection_matrix(self):
+        # Maybe not necessary function
+        space_dim = 2
+        matr = np.zeros((space_dim, self._dim+1, self._dim+1))
+        for col in range(self._dim+1):
+            for row in range(self._dim+1):
+                if col!=row and type(self.get(row,col))!= bool:
+                    matr[:,col,row] = self.get(row,col)
+        return matr
 
     def get_bool_triangle_matrix(self):
         intersection_exists_matrix = np.zeros((self._dim+1,self._dim+1), dtype=bool)
@@ -38,13 +45,14 @@ class Intersection_matrix():
                 if type(self.get(row,col))== bool and (self.get(row,col) == False):
                     continue
                 intersection_exists_matrix[row, col] = True
-                    # intersection_exists_matrix[col, row] = True
 
         return intersection_exists_matrix
-        # return self._intersection_list[ind]
+
+    def get_bool_matrix(self):
+        boolMat = self.get_bool_triangle_matrix()
+        return boolMat + boolMat.T
 
     def get_index(self, row, col):
-        
         if row > np.abs(self._dim):
             print('WARNING: Fist object index out of bound.')
             row = 0
@@ -245,7 +253,7 @@ def obs_common_section_hirarchy(obs, hirarchy=True, N_points=30, Gamma_steps=5):
     dim = len(obs[0].x0)
     d = dim # TODO remove!
 
-    # Choose number of points each iteration
+    # Choose number of points each iteration 
     Intersections = Intersection_matrix(N_obs)
     
     rotMat = np.zeros((d,d, N_obs))
@@ -263,6 +271,7 @@ def obs_common_section_hirarchy(obs, hirarchy=True, N_points=30, Gamma_steps=5):
             if R_max[it_obs1]+R_max[it_obs2]<LA.norm(np.array(obs[it_obs1].x0)-np.array(obs[it_obs2].x0)):
                 continue # NO intersection possible, to far away
 
+            # 
             # if True: @ Already intersection present
             #     N_inter = intersection_sf[it_intersect].shape[1] # Number of intersection points
 
@@ -280,7 +289,7 @@ def obs_common_section_hirarchy(obs, hirarchy=True, N_points=30, Gamma_steps=5):
 
             # Get all points of obs2 in obs1
             Gamma_temp = (rotMat[:,:,it_obs1].T @  (np.array(obs[it_obs2].x_obs_sf).T-np.tile(obs[it_obs1].x0,(N_points,1)).T ) / np.tile(obs[it_obs1].a, (N_points,1)).T )
-            Gamma = np.sum( (1/obs[it_obs1].sf *  Gamma_temp) ** (2*np.tile(obs[it_obs1].p, (N_points,1)).T), axis=0)
+            Gamma = np.sum( (1/obs[it_obs1].sf *  Gamma_temp) ** (2*np.tile(obs[it_obs1].p, (N_points,1)).T), axis=0) 
             intersection_points = np.array(obs[it_obs2].x_obs_sf)[Gamma<1,:].T
 
             # Get all points of obs1 in obs2
@@ -318,48 +327,41 @@ def obs_common_section_hirarchy(obs, hirarchy=True, N_points=30, Gamma_steps=5):
                 # Get mean
                 # intersection_points = np.unique(intersection_points, axis=1)
                 Intersections.set(it_obs1, it_obs2, np.mean(intersection_points,1))
-                
-    # Go through all points an detect clusters
-    
+
     # Iterate over all obstacles with an intersection
-    intersection_matrix_triangle = Intersections.get_bool_triangle_matrix()
+    intersection_matrix = Intersections.get_bool_matrix()
 
     # All obstacles, which have at least one intersection
-    intersecting_obstacles = np.arange(N_obs)[np.sum(intersection_matrix_triangle,0)>0]
+    intersecting_obstacles = np.arange(N_obs)[np.sum(intersection_matrix,0)>0]
 
     intersection_clusters = []
 
     while intersecting_obstacles.shape[0]:
-        ii = intersecting_obstacles[0]
-        intersection_clusters.append([ii])
+        intersection_matrix_reduced = intersection_matrix[intersecting_obstacles,:][:,intersecting_obstacles]
+
+        # print(intersecting_obstacles)
+        intersection_cluster = np.zeros(intersecting_obstacles.shape[0], dtype=bool)
         
-        children = np.arange(N_obs)[intersection_matrix_triangle[:,ii]]
+        intersection_cluster[0] = True
 
-        while children.shape[0]>0:
-            circle_object = 0
-            
-            if np.sum([children[0] in intersection_clusters[kk] for kk in range(len(intersection_clusters))]):
-                warnings.warn('Object-circle has been detected.')
-            
-            if not children[0] in intersection_clusters[-1]:
-                intersection_clusters[-1].append(children[0])
+        new_obstacles = 1 # new obstacles in cluster
+        # Iteratively search through clusters. Similar to google page ranking
+        while new_obstacles:
+            intersection_cluster_old = intersection_cluster
+            intersection_cluster = intersection_matrix_reduced @ intersection_cluster + intersection_cluster
+            intersection_cluster = intersection_cluster.astype(bool)
 
-            if children[0] in intersecting_obstacles:
-                
-                ind_equal = np.arange(len(intersecting_obstacles))[intersecting_obstacles==children[0]]
-                children = np.hstack((children, np.arange(N_obs)[intersection_matrix_triangle[:,children[0]]]))
+            # Bool operation. Equals to one if not equal
+            new_obstacles = np.any(intersection_cluster - intersection_cluster_old)
+        
+        intersection_clusters.append(intersecting_obstacles[intersection_cluster].tolist())
+        
+        # Only keep non-intersecting obstacles
+        intersecting_obstacles = intersecting_obstacles[intersection_cluster==0]
 
-                intersecting_obstacles = np.delete(intersecting_obstacles,ind_equal[0])
-
-                if ind_equal.shape[0]>1:
-                    warnings.warn('SHAPE not equal')
-                    
-            children = np.delete(children, 0)
-        intersecting_obstacles = np.delete(intersecting_obstacles, 0)
 
     # All (close) relatives of one object
-    intersection_relatives = intersection_matrix_triangle + intersection_matrix_triangle.T
-
+    intersection_relatives = intersection_matrix 
     # Choose center
     geometric_center = np.zeros(dim)
 
@@ -397,21 +399,4 @@ def obs_common_section_hirarchy(obs, hirarchy=True, N_points=30, Gamma_steps=5):
             
             del obstacle_tree[0]
     
-        # for jj in intersection_clusters[ii]:
-            # center_distance[jj] = 
-    
-    # warnings.warn('Object-circle has been detected.')
-    
-    # if len(intersection_sf)==0:
-        # return  []
-    
-    # for ii in range(len(intersection_obs)):
-        # intersection_sf[ii] = np.unique(intersection_sf[ii], axis=1)
-
-        # Get numerical mean
-        # x_center_dyn= np.mean(intersection_sf[ii], axis=1)
-        
-        # for it_obs in intersection_obs[ii]:
-            # obs[it_obs].center_dyn = x_center_dyn
-
     return intersection_obs
